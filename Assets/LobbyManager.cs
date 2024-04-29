@@ -113,7 +113,7 @@ public class LobbyManager : MonoBehaviour
     //
     // CREATE & JOIN ROOM
     //
-    public async Task<bool> createRoom(string lobbyName, string topic = "veggies", int maxMember = 2, bool IsPrivate = false)
+    public static async Task<bool> CreateRoomAsync(string lobbyName, string topic = "veggies", int maxMember = 2, bool IsPrivate = false)
     {
         try
         {
@@ -140,16 +140,23 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-    public async Task<bool> JoinRandomRoom()
+    public static async Task<bool> JoinRandomRoom()
     {
         // 방이 없을 경우 예외 처리
         try
         {
             QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync();
-            await Lobbies.Instance.JoinLobbyByIdAsync(queryResponse.Results[0].Id);
-            curLobby = queryResponse.Results[0];
-            Debug.Log("Joined Room : " + curLobby.Data["Topic"].Value);
-            return true;
+            if(queryResponse.Results.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                await Lobbies.Instance.JoinLobbyByIdAsync(queryResponse.Results[0].Id);
+                curLobby = queryResponse.Results[0];
+                Debug.Log("Joined Room : " + curLobby.Data["Topic"].Value);
+                return true;
+            }
         }
         catch (LobbyServiceException e)
         {
