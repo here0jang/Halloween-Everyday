@@ -20,5 +20,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/04 OUTFIT.unity
     guid: 645113065c4e0eb4c935ec145ba17872
+  - enabled: 1
+    path: Assets/Scenes/05 QUIZ.unity
+    guid: 69a1564f6f7658540ac0baf3581ff834
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: cb7ae808e7a365a48b4957ca41002247, type: 2}

@@ -6,6 +6,7 @@ public class KeywordManager : MonoBehaviour
 {
     public const int KEYWORD_COUNT = 3;
 
+
     public TMPro.TMP_Text LimitText;
     public TMPro.TMP_Text TopicText;
 
@@ -30,6 +31,7 @@ public class KeywordManager : MonoBehaviour
             bool keywordSent = await LobbyManager.SetPlayerKeywordData(KeywordInputField.text);
             if(keywordSent)
             {
+                PlayerPrefs.SetString("Keyword", KeywordInputField.text);
                 SceneManager.LoadScene("04 OUTFIT");
             }
             else

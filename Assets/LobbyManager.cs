@@ -245,7 +245,7 @@ public class LobbyManager : MonoBehaviour
     //
     // STYLING
     //
-    public async Task<bool> UpdatePlayerStyleData(string styleId1, string styleId2)
+    public static async Task<bool> UpdatePlayerStyleData(string styleId1, string styleId2)
     {
         try
         {

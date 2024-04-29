@@ -126,7 +126,7 @@ namespace MameshibaGames.Kekos.CharacterEditorScene.Customization
             faceCaracteristicsCustomization.ChangeWithSaveItemInfo(saveCustomizationModel.faceCharacteristicsSelected);
         }
 
-        public void SaveSettings()
+        public string SaveSettings()
         {
             SaveCustomizationModel saveCustomizationModel = new SaveCustomizationModel
             {
@@ -148,7 +148,9 @@ namespace MameshibaGames.Kekos.CharacterEditorScene.Customization
                 skinCustomization.GetSaveItemInfo();
 
             string savedCharacterJson = JsonUtility.ToJson(saveCustomizationModel);
-            PlayerPrefs.SetString(_SaveString, savedCharacterJson);
+
+            return savedCharacterJson;
+            //PlayerPrefs.SetString(_SaveString, savedCharacterJson);
         }
 
         private void RandomizeAll()
