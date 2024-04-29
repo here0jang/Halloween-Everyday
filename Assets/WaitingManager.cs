@@ -6,7 +6,7 @@ public class WaitingManager : MonoBehaviour
 {
     public TMPro.TMP_Text TopicText;
     public TMPro.TMP_Text PlayerCountText;
-    public TMPro.TMP_Text GameStateText;
+    public TMPro.TMP_InputField NicNameInputField;
 
     public GameObject InviteCode;
     public TMPro.TMP_Text InviteCodeText;
@@ -21,7 +21,6 @@ public class WaitingManager : MonoBehaviour
     private void Start()
     {
         TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
-        GameStateText.text = LobbyManager.CurLobby.IsPrivate ? "비공개" : "공개";
     }
 
     private void Update()
@@ -48,8 +47,9 @@ public class WaitingManager : MonoBehaviour
             if (LobbyManager.CurLobby.Data["IsStarted"].Value == "0" && mLoading == null)
             {
                 mLoading = Instantiate(Resources.Load<GameObject>("Loading UI"));
+
                 // Client Player Update
-                SceneManager.LoadScene("03 KEYWORD");
+                setNicNameAsync();
             }
         }
     }
@@ -63,13 +63,27 @@ public class WaitingManager : MonoBehaviour
         if (IsStarted) 
         {
             // Host Player Update
-            SceneManager.LoadScene("03 KEYWORD");
+            setNicNameAsync();
         }
         else
         {
             Destroy(mLoading);
             PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
             popUp.InstantiatePopUp("시작 실패");
+        }
+    }
+
+    private async void setNicNameAsync()
+    {
+        bool hasNicNameSet = await LobbyManager.SetPlayerNicName(NicNameInputField.text);
+        if(hasNicNameSet)
+        {
+            SceneManager.LoadScene("03 KEYWORD");
+        }
+        else
+        {
+            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+            popUp.InstantiatePopUp("닉네임 실패");
         }
     }
 

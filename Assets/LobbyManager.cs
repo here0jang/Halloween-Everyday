@@ -124,12 +124,9 @@ public class LobbyManager : MonoBehaviour
                 // private : id, 코드로만 참여 가능
                 {"Topic", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: topic)},
                 {"IsStarted", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "1")},
-                //{"FinishCount", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "0")},
             };
 
             curLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxMember, lobbyOptions);
-            //var callbacks = new LobbyEventCallbacks();
-            //callbacks.PlayerDataChanged += OnPlayerDataChanged;
             Debug.Log("lobby created successfully, lobby topic : " + curLobby.Data["Topic"].Value);
 
             return true;
@@ -142,10 +139,11 @@ public class LobbyManager : MonoBehaviour
     }
     public static async Task<bool> JoinRandomRoom()
     {
-        // 방이 없을 경우 예외 처리
         try
         {
             QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync();
+
+            // 방이 없을 경우 예외 처리
             if(queryResponse.Results.Count == 0)
             {
                 return false;
@@ -193,6 +191,27 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    public static async Task<bool> SetPlayerNicName(string name)
+    {
+        try
+        {
+            UpdatePlayerOptions options = new UpdatePlayerOptions();
+            options.Data = new Dictionary<string, PlayerDataObject>()
+            {
+                {"Name", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: name)},
+            };
+
+            string playerId = AuthenticationService.Instance.PlayerId;
+            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
+            return true;
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+            return false;
+        }
+    }
+
     //-----------------------------------------------------------------------
     //
     // KEYWORDSTYLING
@@ -205,7 +224,6 @@ public class LobbyManager : MonoBehaviour
             options.Data = new Dictionary<string, PlayerDataObject>()
             {
                 {"Keyword", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: keyword)},
-                {"Name", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: name)},
                 {"StyleId1", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
                 {"StyleId2", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
             };
