@@ -216,7 +216,7 @@ public class LobbyManager : MonoBehaviour
     //
     // KEYWORDSTYLING
     //
-    public async Task<bool> UpdatePlayerKeywordData(string keyword, string name)
+    public static async Task<bool> SetPlayerKeywordData(string keyword)
     {
         try
         {
@@ -224,6 +224,8 @@ public class LobbyManager : MonoBehaviour
             options.Data = new Dictionary<string, PlayerDataObject>()
             {
                 {"Keyword", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: keyword)},
+
+                // 모든 플레이어가 스타일 데이터를 보냈는지 체크하기 위함
                 {"StyleId1", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
                 {"StyleId2", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
             };

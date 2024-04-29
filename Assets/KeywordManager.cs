@@ -1,0 +1,45 @@
+using UnityEngine;
+using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
+
+public class KeywordManager : MonoBehaviour
+{
+    public const int KEYWORD_COUNT = 3;
+
+    public TMPro.TMP_Text LimitText;
+    public TMPro.TMP_Text TopicText;
+
+    public TMPro.TMP_InputField KeywordInputField;
+
+    private async void Start()
+    {
+        if(LobbyManager.CurLobby != null)
+        {
+            TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
+
+            float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + KEYWORD_COUNT; /* 하드웨어 시간 이용 */
+            while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
+            {
+                LimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
+                await Task.Yield();
+            }
+
+
+            GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
+
+            bool keywordSent = await LobbyManager.SetPlayerKeywordData(KeywordInputField.text);
+            if(keywordSent)
+            {
+                SceneManager.LoadScene("04 OUTFIT");
+            }
+            else
+            {
+                Destroy(loading);
+
+                // TODO : 플레이어가 해결할 수 있는 원인일 경우 안내 메시지 추가 (에러코드로 분류)
+                PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+                popUp.InstantiatePopUp("키워드 전송 실패");
+            }
+        }
+    }
+}
