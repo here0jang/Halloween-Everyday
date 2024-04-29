@@ -32,6 +32,7 @@ public class PopUpUIManager : MonoBehaviour
         YesButton.onClick.AddListener(() =>
         {
             yesAction();
+            Destroy(gameObject);
         });
         NoButton.onClick.AddListener(() =>
         {

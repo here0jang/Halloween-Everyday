@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/02 WAITING.unity
     guid: 94d392f6e75f213448030db6a1c7d86a
+  - enabled: 1
+    path: Assets/Scenes/03 KEYWORD.unity
+    guid: 63e38767dbe360947a4bfcd5ae954e22
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: cb7ae808e7a365a48b4957ca41002247, type: 2}

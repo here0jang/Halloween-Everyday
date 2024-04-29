@@ -13,7 +13,7 @@ public class LobbyManager : MonoBehaviour
     public static Lobby CurLobby { get { return curLobby; }}
 
 
-    private const float LOBBY_UPDATE_TIMER_MAX = 2f;
+    public const float LOBBY_UPDATE_TIMER_MAX = 2f;
 
     private float lobbyUpdateTimer = 0f;
     private float heartBeatTimer      = 0f;
@@ -174,7 +174,7 @@ public class LobbyManager : MonoBehaviour
     //
     // WAITING
     //
-    public async Task<bool> StartGame()
+    public static async Task<bool> StartGame()
     {
         try
         {
@@ -271,7 +271,7 @@ public class LobbyManager : MonoBehaviour
     // QUIT
     //
 
-    public async void migrateHost()
+    public static async void migrateHost()
     {
         try
         {
@@ -284,7 +284,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task<bool> LeaveRoom()
+    public static async Task<bool> LeaveRoom()
     {
         try
         {
