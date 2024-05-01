@@ -17,28 +17,38 @@ public class WaitingManager : MonoBehaviour
     public GameObject StartButton;
 
     private float mUpdateTimer = 0f;
+    private int mPlayerMax = 0;
+    private string mMyId;
+
     private GameObject mLoading = null;
 
     private void Start()
     {
-        TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
-        switch (LobbyManager.CurLobby.Data["GameMode"].Value)
+        if (LobbyManager.CurLobby != null)
         {
-            case "Relay" :
-                {
-                    GameModeText.text = "릴레이 모드";
-                    break;
-                }
-            case "Together":
-                {
-                    GameModeText.text = "머내옷누 모드";
-                    break;
-                }
-            default :
-                {
-                    GameModeText.text = "일반 모드";
-                    break;
-                }
+            TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
+
+            switch (LobbyManager.CurLobby.Data["GameMode"].Value)
+            {
+                case "Relay":
+                    {
+                        GameModeText.text = "릴레이 모드";
+                        break;
+                    }
+                case "Together":
+                    {
+                        GameModeText.text = "머내옷누 모드";
+                        break;
+                    }
+                default:
+                    {
+                        GameModeText.text = "일반 모드";
+                        break;
+                    }
+            }
+
+            mPlayerMax = LobbyManager.CurLobby.MaxPlayers;
+            mMyId = AuthenticationService.Instance.PlayerId;
         }
     }
 
@@ -53,14 +63,16 @@ public class WaitingManager : MonoBehaviour
                 mUpdateTimer = LobbyManager.LOBBY_UPDATE_TIMER_MAX;
             }
 
-            PlayerCountText.text = LobbyManager.CurLobby.Players.Count + "/" + LobbyManager.CurLobby.MaxPlayers;
+            PlayerCountText.text = LobbyManager.CurLobby.Players.Count + "/" + mPlayerMax;
 
-            InviteCodeText.text = AuthenticationService.Instance.PlayerId == LobbyManager.CurLobby.HostId ? LobbyManager.CurLobby.LobbyCode : string.Empty;
-            InviteCode.SetActive(AuthenticationService.Instance.PlayerId == LobbyManager.CurLobby.HostId);
+            string hostId = LobbyManager.CurLobby.HostId;
 
-            InstructionText.text = AuthenticationService.Instance.PlayerId == LobbyManager.CurLobby.HostId ? "시작하기 버튼을 누르면 게임이 시작됩니다. " : "방장이 게임을 시작할 때까지 기다리세요.";
+            InviteCodeText.text = mMyId == hostId ? LobbyManager.CurLobby.LobbyCode : string.Empty;
+            InviteCode.SetActive(mMyId == hostId);
+
+            InstructionText.text = mMyId == hostId ? "시작하기 버튼을 누르면 게임이 시작됩니다. " : "방장이 게임을 시작할 때까지 기다리세요.";
            
-            StartButton.SetActive(AuthenticationService.Instance.PlayerId == LobbyManager.CurLobby.HostId);
+            StartButton.SetActive(mMyId == hostId);
 
 
             if (LobbyManager.CurLobby.Data["IsStarted"].Value == "0" && mLoading == null)
@@ -70,6 +82,20 @@ public class WaitingManager : MonoBehaviour
                 // Client Player Update
                 setNicNameAsync();
             }
+        }
+    }
+
+    private async void setNicNameAsync()
+    {
+        bool hasNicNameSet = await LobbyManager.SetPlayerData("Name", NicNameInputField.text);
+        if (hasNicNameSet)
+        {
+            SceneManager.LoadScene("03 KEYWORD");
+        }
+        else
+        {
+            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+            popUp.InstantiatePopUp("닉네임 실패");
         }
     }
 
@@ -89,20 +115,6 @@ public class WaitingManager : MonoBehaviour
             Destroy(mLoading);
             PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
             popUp.InstantiatePopUp("시작 실패");
-        }
-    }
-
-    private async void setNicNameAsync()
-    {
-        bool hasNicNameSet = await LobbyManager.SetPlayerData("Name", NicNameInputField.text);
-        if(hasNicNameSet)
-        {
-            SceneManager.LoadScene("03 KEYWORD");
-        }
-        else
-        {
-            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
-            popUp.InstantiatePopUp("닉네임 실패");
         }
     }
 

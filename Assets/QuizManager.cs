@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class QuizManager : MonoBehaviour
 {
-    public const int QUIZ_COUNT = 30;
+
 
     private GameObject mLoading;
     private int mOutfitFinishedCount = 0;
@@ -145,7 +145,7 @@ public class QuizManager : MonoBehaviour
                 }
 
                 // 타이머 시작
-                float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + QUIZ_COUNT; /* 하드웨어 시간 이용 */
+                float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.QUIZ_COUNT; /* 하드웨어 시간 이용 */
                 while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
                 {
                     LimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
@@ -176,7 +176,7 @@ public class QuizManager : MonoBehaviour
             CharacterSpawner.SpawnSavedCharacter(LobbyManager.CurLobby.Players[friendIndex].Data["Style1_" + (relayCount - 1)].Value + LobbyManager.CurLobby.Players[friendIndex].Data["Style2_" + (relayCount - 1)].Value);
 
             // 타이머 시작
-            float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + QUIZ_COUNT; /* 하드웨어 시간 이용 */
+            float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.QUIZ_COUNT; /* 하드웨어 시간 이용 */
             while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
             {
                 LimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";

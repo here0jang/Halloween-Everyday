@@ -19,6 +19,9 @@ public class LobbyManager : MonoBehaviour
     public static Lobby CurLobby { get { return curLobby; }}
 
     public const float LOBBY_UPDATE_TIMER_MAX = 2.1f;
+    public const int KEYWORD_COUNT = 15;
+    public const int OUTFIT_COUNT = 10;
+    public const int QUIZ_COUNT = 30;
 
     private float lobbyUpdateTimer = 0f;
     private float heartBeatTimer      = 0f;

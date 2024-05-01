@@ -2863,15 +2863,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b83147a337702eb44bfa5f87bbd79587, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MainCanvas: {fileID: 1401312714}
-  CreateCanvas: {fileID: 780613746}
-  TopicInputField: {fileID: 1382437323}
-  RandomTopicButton: {fileID: 758152111}
-  RelayModeToggle: {fileID: 1476003872}
-  TogetherModeToggle: {fileID: 1293914855}
-  MaxPlayerText: {fileID: 125343714}
-  PublicRoomStateToggle: {fileID: 1443673012}
-  RoomStateDescText: {fileID: 631181875}
   mTopics:
   - "\uACFC\uC77C"
   - "\uC57C\uCC44"
@@ -2879,6 +2870,15 @@ MonoBehaviour:
   mTopic: veggies
   mGameMode: 0
   mMaxPlayers: 4
+  mMainCanvas: {fileID: 1401312714}
+  mCreateCanvas: {fileID: 780613746}
+  mTopicInputField: {fileID: 1382437323}
+  mRandomTopicButton: {fileID: 758152111}
+  mRelayModeToggle: {fileID: 1476003872}
+  mTogetherModeToggle: {fileID: 1293914855}
+  mMaxPlayerText: {fileID: 567788807}
+  mPublicRoomStateToggle: {fileID: 1443673012}
+  mRoomStateDescText: {fileID: 631181875}
 --- !u!1 &1147199732
 GameObject:
   m_ObjectHideFlags: 0

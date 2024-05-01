@@ -5,9 +5,8 @@ using MameshibaGames.Kekos.CharacterEditorScene.Customization;
 
 public class OutfitManager : MonoBehaviour
 {
-    public const int OUTFIT_COUNT = 10;
-
     public TMPro.TMP_Text LimitText;
+    public TMPro.TMP_Text GameModeText;
     public TMPro.TMP_Text NicNameText;
     public TMPro.TMP_Text TopicText;
     public TMPro.TMP_Text KeywordText;
@@ -17,30 +16,52 @@ public class OutfitManager : MonoBehaviour
 
     private async void Start()
     {
+        // 로딩
         GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
-        await Task.Delay(3000);
-        loading.SetActive(false);
 
         int relayCount = PlayerPrefs.GetInt("RelayCount");
-        relayCount++;
-        if(relayCount > LobbyManager.CurLobby.Players.Count)
+
+        // 퀴즈가 모두 끝났으면 결과 화면으로 이동
+        if(relayCount >=  LobbyManager.CurLobby.Players.Count)
         {
             SceneManager.LoadScene("06 RESULT");
         }
-
+        relayCount++;
         PlayerPrefs.SetInt("RelayCount", relayCount);
 
+        await Task.Delay(3000);
 
         // 주제
         TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
 
+        // 게임모드
+        switch (LobbyManager.CurLobby.Data["GameMode"].Value)
+        {
+            case "Relay":
+                {
+                    GameModeText.text = "릴레이 모드";
+                    break;
+                }
+            case "Together":
+                {
+                    GameModeText.text = "머내옷누 모드";
+                    break;
+                }
+            default:
+                {
+                    GameModeText.text = "일반 모드";
+                    break;
+                }
+        }
 
         // 키워드, 닉네임
         KeywordText.text = LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Keyword_" + relayCount].Value;
         NicNameText.text = LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Name"].Value + "의 퀴즈!";
 
+        loading.SetActive(false);
+
         // 타이머 시작
-        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds +OUTFIT_COUNT; /* 하드웨어 시간 이용 */
+        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds +LobbyManager.OUTFIT_COUNT; /* 하드웨어 시간 이용 */
         while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
         {
             LimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";

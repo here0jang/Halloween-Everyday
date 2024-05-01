@@ -8,40 +8,37 @@ public class MainManager : MonoBehaviour
     private const int MAX_PLAYERS             = 10;
     private const int MIN_PLAYERS              = 2;
     private const string LOBBY_NAME = "my room";
+
     // TODO : 파일에서 가져오는 방식으로 변경
-    [SerializeField]
-    private string[] mTopics = { "과일", "야채", "동물" };
+    [SerializeField] private string[] mTopics = { "과일", "야채", "동물" };
+    [SerializeField] private string mTopic;
+    [SerializeField] private EGameMode mGameMode = EGameMode.Relay;
+    [SerializeField] private int mMaxPlayers = INIT_PLAYER_COUNT;
 
-
-    [Header("MAIN")]
-    public CanvasGroup MainCanvas;
+    [Header("MAIN")] 
+    [SerializeField] private CanvasGroup mMainCanvas;
     [Header("Create")]
-    public CanvasGroup CreateCanvas;
+    [SerializeField] private CanvasGroup mCreateCanvas;
+    [Header("Create - Topic")]
+    [SerializeField] private TMPro.TMP_InputField mTopicInputField;
+    [SerializeField] private Button mRandomTopicButton;
+    [Header("Create - GameMode")]
+    [SerializeField] private Toggle mRelayModeToggle;
+    [SerializeField] private Toggle mTogetherModeToggle;
+    [Header("Create - MaxPlayer")]
+    [SerializeField] private TMPro.TMP_Text mMaxPlayerText;
+    [Header("Create - Room State")]
+    [SerializeField] private Toggle mPublicRoomStateToggle;
+    [SerializeField] private TMPro.TMP_Text mRoomStateDescText;
 
-    public TMPro.TMP_InputField TopicInputField;
-    public Button RandomTopicButton;
-
-    public Toggle RelayModeToggle;
-    public Toggle TogetherModeToggle;
-
-    public TMPro.TMP_Text MaxPlayerText;
-
-    public Toggle PublicRoomStateToggle;
-    public TMPro.TMP_Text RoomStateDescText;
 
 
-    [SerializeField]
-    private string mTopic;
-    [SerializeField]
-    private EGameMode mGameMode = EGameMode.Relay;
-    [SerializeField]
-    private int mMaxPlayers = INIT_PLAYER_COUNT;
 
 
     private void Start()
     {
-        hideCanvas(CreateCanvas);
-        showCanvas(MainCanvas);
+        hideCanvas(mCreateCanvas);
+        showCanvas(mMainCanvas);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -54,16 +51,16 @@ public class MainManager : MonoBehaviour
         OnRandomTopicClicked();
 
         mGameMode = EGameMode.Relay;
-        RelayModeToggle.isOn = true;
+        mRelayModeToggle.isOn = true;
 
         mMaxPlayers = INIT_PLAYER_COUNT;
-        MaxPlayerText.text = mMaxPlayers.ToString();
+        mMaxPlayerText.text = mMaxPlayers.ToString();
 
-        PublicRoomStateToggle.isOn = true;
+        mPublicRoomStateToggle.isOn = true;
 
 
-        hideCanvas(MainCanvas);
-        showCanvas(CreateCanvas);
+        hideCanvas(mMainCanvas);
+        showCanvas(mCreateCanvas);
     }
 
     public async void OnJoinRandomClickedAsync()
@@ -92,22 +89,22 @@ public class MainManager : MonoBehaviour
     //
     public void OnExitCreateClicked()
     {
-        hideCanvas(CreateCanvas);
-        showCanvas(MainCanvas);
+        hideCanvas(mCreateCanvas);
+        showCanvas(mMainCanvas);
     }
 
     public async void OnCreateRoomClickedAsync()
     {
         // TODO : 버튼으로 클릭시 버튼에 해당하는 주제
-        if(TopicInputField.text != string.Empty)
+        if(mTopicInputField.text != string.Empty)
         {
-            mTopic = TopicInputField.text;
+            mTopic = mTopicInputField.text;
         }
 
         // TODO : Addressable 로 변경
         GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
 
-        bool IsCreated = await LobbyManager.CreateRoomAsync(LOBBY_NAME, mTopic, mGameMode, mMaxPlayers, !PublicRoomStateToggle.isOn);
+        bool IsCreated = await LobbyManager.CreateRoomAsync(LOBBY_NAME, mTopic, mGameMode, mMaxPlayers, !mPublicRoomStateToggle.isOn);
         if(IsCreated)
         {
             SceneManager.LoadScene("02 WAITING");
@@ -125,7 +122,7 @@ public class MainManager : MonoBehaviour
     public void OnRandomTopicClicked()
     {
         mTopic = mTopics[Random.Range(0, mTopics.Length)];
-        TopicInputField.text = mTopic;
+        mTopicInputField.text = mTopic;
     }
 
     public void OnAddPlayerClicked()
@@ -133,7 +130,7 @@ public class MainManager : MonoBehaviour
         if (mMaxPlayers < MAX_PLAYERS)
         {
             mMaxPlayers += 1;
-            MaxPlayerText.text = mMaxPlayers.ToString();
+            mMaxPlayerText.text = mMaxPlayers.ToString();
         }
     }
 
@@ -142,29 +139,29 @@ public class MainManager : MonoBehaviour
         if (mMaxPlayers > MIN_PLAYERS)
         {
             mMaxPlayers -= 1;
-            MaxPlayerText.text = mMaxPlayers.ToString();
+            mMaxPlayerText.text = mMaxPlayers.ToString();
         }
     }
 
     public void OnPublicToggleOn()
     {
-        if(PublicRoomStateToggle.isOn)
+        if(mPublicRoomStateToggle.isOn)
         {
-            RoomStateDescText.text = "모든 사람이 참가할 수 있습니다.";
+            mRoomStateDescText.text = "모든 사람이 참가할 수 있습니다.";
         }
         else
         {
-            RoomStateDescText.text = "코드가 있는 친구만 참가할 수 있습니다. ";
+            mRoomStateDescText.text = "코드가 있는 친구만 참가할 수 있습니다. ";
         }
     }
 
     public void OnGameModeToggleOn()
     {
-        if(RelayModeToggle.isOn)
+        if(mRelayModeToggle.isOn)
         {
             mGameMode = EGameMode.Relay;
         }
-        else if(TogetherModeToggle.isOn)
+        else if(mTogetherModeToggle.isOn)
         {
             mGameMode = EGameMode.Together;
         }
