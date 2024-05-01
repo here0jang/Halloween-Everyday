@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class WaitingManager : MonoBehaviour
 {
     public TMPro.TMP_Text TopicText;
+    public TMPro.TMP_Text GameModeText;
     public TMPro.TMP_Text PlayerCountText;
     public TMPro.TMP_InputField NicNameInputField;
 
@@ -15,12 +16,30 @@ public class WaitingManager : MonoBehaviour
 
     public GameObject StartButton;
 
-    private float updateTimer = 0f;
+    private float mUpdateTimer = 0f;
     private GameObject mLoading = null;
 
     private void Start()
     {
         TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
+        switch (LobbyManager.CurLobby.Data["GameMode"].Value)
+        {
+            case "Relay" :
+                {
+                    GameModeText.text = "릴레이 모드";
+                    break;
+                }
+            case "Together":
+                {
+                    GameModeText.text = "머내옷누 모드";
+                    break;
+                }
+            default :
+                {
+                    GameModeText.text = "일반 모드";
+                    break;
+                }
+        }
     }
 
     private void Update()
@@ -28,10 +47,10 @@ public class WaitingManager : MonoBehaviour
         if(LobbyManager.CurLobby != null)
         {
             // Update Poll (Rate Limit)
-            updateTimer -= Time.deltaTime;
-            if (updateTimer < 0f)
+            mUpdateTimer -= Time.deltaTime;
+            if (mUpdateTimer < 0f)
             {
-                updateTimer = LobbyManager.LOBBY_UPDATE_TIMER_MAX;
+                mUpdateTimer = LobbyManager.LOBBY_UPDATE_TIMER_MAX;
             }
 
             PlayerCountText.text = LobbyManager.CurLobby.Players.Count + "/" + LobbyManager.CurLobby.MaxPlayers;
@@ -75,7 +94,7 @@ public class WaitingManager : MonoBehaviour
 
     private async void setNicNameAsync()
     {
-        bool hasNicNameSet = await LobbyManager.SetPlayerNicName(NicNameInputField.text);
+        bool hasNicNameSet = await LobbyManager.SetPlayerData("Name", NicNameInputField.text);
         if(hasNicNameSet)
         {
             SceneManager.LoadScene("03 KEYWORD");
@@ -100,7 +119,7 @@ public class WaitingManager : MonoBehaviour
         bool exited = await LobbyManager.LeaveRoom();
         if(exited)
         {
-            SceneManager.LoadScene("01 Main");
+            SceneManager.LoadScene("01 MAIN");
         }
         else
         {

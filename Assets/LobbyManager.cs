@@ -7,13 +7,18 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
+public enum EGameMode
+{
+    Relay,
+    Together,
+}
+
 public class LobbyManager : MonoBehaviour
 {
     private static Lobby curLobby = null;
     public static Lobby CurLobby { get { return curLobby; }}
 
-
-    public const float LOBBY_UPDATE_TIMER_MAX = 2f;
+    public const float LOBBY_UPDATE_TIMER_MAX = 2.1f;
 
     private float lobbyUpdateTimer = 0f;
     private float heartBeatTimer      = 0f;
@@ -36,6 +41,7 @@ public class LobbyManager : MonoBehaviour
         handleLobbyPollForUpdates();
     }
 
+
     private async void handleLobbyHeartBeat()
     {
         // 내가 호스트면 계속 살린다
@@ -51,7 +57,6 @@ public class LobbyManager : MonoBehaviour
             }
         }
     }
-
     private async void handleLobbyPollForUpdates()
     {
         // 현재 로비 입장중이면 주기적으로 업데이트
@@ -113,7 +118,7 @@ public class LobbyManager : MonoBehaviour
     //
     // CREATE & JOIN ROOM
     //
-    public static async Task<bool> CreateRoomAsync(string lobbyName, string topic = "veggies", int maxMember = 2, bool IsPrivate = false)
+    public static async Task<bool> CreateRoomAsync(string lobbyName, string topic = "veggies", EGameMode gameMode = EGameMode.Relay, int maxMember = 2, bool IsPrivate = false)
     {
         try
         {
@@ -124,10 +129,11 @@ public class LobbyManager : MonoBehaviour
                 // private : id, 코드로만 참여 가능
                 {"Topic", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: topic)},
                 {"IsStarted", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "1")},
+                {"GameMode", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: gameMode.ToString())},
             };
 
             curLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxMember, lobbyOptions);
-            Debug.Log("lobby created successfully, lobby topic : " + curLobby.Data["Topic"].Value);
+            Debug.Log("lobby created successfully, lobby topic : " + curLobby.Data["Topic"].Value + " Room State : " + curLobby.IsPrivate + " GameMode : "  + curLobby.Data["GameMode"].Value);
 
             return true;
         }
@@ -191,43 +197,19 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public static async Task<bool> SetPlayerNicName(string name)
-    {
-        try
-        {
-            UpdatePlayerOptions options = new UpdatePlayerOptions();
-            options.Data = new Dictionary<string, PlayerDataObject>()
-            {
-                {"Name", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: name)},
-            };
-
-            string playerId = AuthenticationService.Instance.PlayerId;
-            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
-            return true;
-        }
-        catch (LobbyServiceException e)
-        {
-            Debug.Log(e);
-            return false;
-        }
-    }
-
     //-----------------------------------------------------------------------
     //
-    // KEYWORDSTYLING
+    // PLAYER DATA
     //
-    public static async Task<bool> SetPlayerKeywordData(string keyword)
+
+    public static async Task<bool> SetPlayerData(string _key, string _value)
     {
         try
         {
             UpdatePlayerOptions options = new UpdatePlayerOptions();
             options.Data = new Dictionary<string, PlayerDataObject>()
             {
-                {"Keyword", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: keyword)},
-
-                // 모든 플레이어가 스타일 데이터를 보냈는지 체크하기 위함
-                {"StyleId1", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
-                {"StyleId2", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: "")},
+                {_key, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value)},
             };
 
             string playerId = AuthenticationService.Instance.PlayerId;
@@ -240,20 +222,15 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-    
-    //-----------------------------------------------------------------------
-    //
-    // STYLING
-    //
-    public static async Task<bool> UpdatePlayerStyleData(string styleId1, string styleId2)
+    public static async Task<bool> SetPlayerData(string _key1,  string _value1, string _key2, string _value2)
     {
         try
         {
             UpdatePlayerOptions options = new UpdatePlayerOptions();
             options.Data = new Dictionary<string, PlayerDataObject>()
             {
-                {"StyleId1", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: styleId1)},
-                {"StyleId2", new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: styleId2)},
+                {_key1, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value1)},
+                {_key2, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value2)},
             };
 
             string playerId = AuthenticationService.Instance.PlayerId;
@@ -266,22 +243,25 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-
-    public async Task<bool> StartQuiz()
+    public static async Task<bool> SetPlayerData(string _key1, string _value1, string _key2, string _value2, string _key3, string _value3)
     {
         try
         {
-            UpdateLobbyOptions options = new UpdateLobbyOptions();
-            options.Data = new Dictionary<string, DataObject>()
+            UpdatePlayerOptions options = new UpdatePlayerOptions();
+            options.Data = new Dictionary<string, PlayerDataObject>()
             {
-                {"IsStarted", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "0")},
+                {_key1, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value1)},
+                {_key2, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value2)},
+                {_key3, new PlayerDataObject(visibility: PlayerDataObject.VisibilityOptions.Public,value: _value3)},
             };
-            curLobby = await Lobbies.Instance.UpdateLobbyAsync(CurLobby.Id, options);
+
+            string playerId = AuthenticationService.Instance.PlayerId;
+            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
             return true;
         }
         catch (LobbyServiceException e)
         {
-            Debug.LogError(e);
+            Debug.Log(e);
             return false;
         }
     }
@@ -303,7 +283,6 @@ public class LobbyManager : MonoBehaviour
             Debug.LogError(e);
         }
     }
-
     public static async Task<bool> LeaveRoom()
     {
         try
@@ -335,6 +314,9 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
+
+
+
 
 
 
