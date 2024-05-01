@@ -6,9 +6,7 @@ using MameshibaGames.Kekos.CharacterEditorScene.Customization;
 public class OutfitManager : MonoBehaviour
 {
     public TMPro.TMP_Text LimitText;
-    public TMPro.TMP_Text GameModeText;
     public TMPro.TMP_Text NicNameText;
-    public TMPro.TMP_Text TopicText;
     public TMPro.TMP_Text KeywordText;
 
     public CustomizationMediator CustomizationMediator;
@@ -31,32 +29,9 @@ public class OutfitManager : MonoBehaviour
 
         await Task.Delay(3000);
 
-        // 주제
-        TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
-
-        // 게임모드
-        switch (LobbyManager.CurLobby.Data["GameMode"].Value)
-        {
-            case "Relay":
-                {
-                    GameModeText.text = "릴레이 모드";
-                    break;
-                }
-            case "Together":
-                {
-                    GameModeText.text = "머내옷누 모드";
-                    break;
-                }
-            default:
-                {
-                    GameModeText.text = "일반 모드";
-                    break;
-                }
-        }
-
         // 키워드, 닉네임
-        KeywordText.text = LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Keyword_" + relayCount].Value;
-        NicNameText.text = LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Name"].Value + "의 퀴즈!";
+        KeywordText.text = "<color=#6D60CC>" + LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Keyword_" + relayCount].Value + "</color>로 꾸미세요!";
+        NicNameText.text = LobbyManager.CurLobby.Players[(PlayerPrefs.GetInt("FriendIndex") + 1) % LobbyManager.CurLobby.Players.Count].Data["Name"].Value + "<color=#6D60CC>의 퀴즈</color>";
 
         loading.SetActive(false);
 
