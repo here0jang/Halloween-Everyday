@@ -2876,7 +2876,7 @@ MonoBehaviour:
   mRandomTopicButton: {fileID: 758152111}
   mRelayModeToggle: {fileID: 1476003872}
   mTogetherModeToggle: {fileID: 1293914855}
-  mMaxPlayerText: {fileID: 567788807}
+  mMaxPlayerText: {fileID: 125343714}
   mPublicRoomStateToggle: {fileID: 1443673012}
   mRoomStateDescText: {fileID: 631181875}
 --- !u!1 &1147199732
