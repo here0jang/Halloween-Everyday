@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using Unity.Services.Authentication;
 
 public class KeywordManager : MonoBehaviour
 {
-    public const int KEYWORD_COUNT = 3;
+    public const int KEYWORD_COUNT = 15;
 
 
     public TMPro.TMP_Text LimitText;
@@ -16,6 +17,20 @@ public class KeywordManager : MonoBehaviour
     {
         if(LobbyManager.CurLobby != null)
         {
+            int i;
+            for (i = 0;  i < LobbyManager.CurLobby.Players.Count; i++)
+            {
+                if (LobbyManager.CurLobby.Players[i].Id == AuthenticationService.Instance.PlayerId)
+                {
+                    break;
+                }
+            }
+
+            PlayerPrefs.SetInt("MyIndex", i);
+            PlayerPrefs.SetInt("FriendIndex", i);
+            PlayerPrefs.SetInt("RelayCount", 0);
+
+
             TopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
 
             float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + KEYWORD_COUNT; /* 하드웨어 시간 이용 */
@@ -28,10 +43,9 @@ public class KeywordManager : MonoBehaviour
 
             GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
 
-            bool keywordSent = await LobbyManager.SetPlayerKeywordData(KeywordInputField.text);
+            bool keywordSent = await LobbyManager.SetPlayerData("Keyword_1", KeywordInputField.text, "Style1_1", " ", "Style2_1", " ");
             if(keywordSent)
             {
-                PlayerPrefs.SetString("Keyword", KeywordInputField.text);
                 SceneManager.LoadScene("04 OUTFIT");
             }
             else

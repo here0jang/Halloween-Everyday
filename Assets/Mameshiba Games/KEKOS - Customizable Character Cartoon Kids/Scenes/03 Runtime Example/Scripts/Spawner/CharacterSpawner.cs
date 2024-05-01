@@ -62,16 +62,17 @@ namespace MameshibaGames.Kekos.RuntimeExampleScene.Spawner
         
         private void Awake()
         {
-            SpawnSavedCharacter();
+            //SpawnSavedCharacter();
         }
 
-        public void SpawnSavedCharacter()
+        public void SpawnSavedCharacter(string id)
         {
             CleanPreviousCharacter();
 
             CreateNewBaseModel();
-            
-            string savedCharacterJson = PlayerPrefs.GetString("KEKOS_SavedCharacter", "");
+
+            string savedCharacterJson = id;
+            //string savedCharacterJson = PlayerPrefs.GetString("KEKOS_SavedCharacter", "");
             if (string.IsNullOrEmpty(savedCharacterJson)) return;
 
             InstantiatorPart instantiatorPart = new InstantiatorPart();
