@@ -4,39 +4,42 @@ using UnityEngine.UI;
 
 public class PopUpUIManager : MonoBehaviour
 {
-    public TMPro.TMP_Text MessageText;
+    [SerializeField] private TMPro.TMP_Text mMessageText;
 
-    public Button ConfirmButton;
+    [Header("1 Button Popup")]
+    [SerializeField] private Button mConfirmButton;
 
-    public Button YesButton;
-    public Button NoButton;
+    [Header("2 Button Popup")]
+    [SerializeField] private Button mYesButton;
+    [SerializeField] private Button mNoButton;
 
     public void InstantiatePopUp(string message)
     {
-        MessageText.text = message;
-        ConfirmButton.onClick.AddListener(() => 
+        mMessageText.text = message;
+        mConfirmButton.onClick.AddListener(() => 
         {
             Destroy(gameObject);
         });
 
-        YesButton.gameObject.SetActive(false);
-        NoButton.gameObject.SetActive(false);
+        mYesButton.gameObject.SetActive(false);
+        mNoButton.gameObject.SetActive(false);
     }
 
     public void InstantiatePopUp(string message, Action yesAction)
     {
-        MessageText.text = message;
+        mMessageText.text = message;
 
-        YesButton.onClick.AddListener(() =>
+        mYesButton.onClick.AddListener(() =>
         {
             yesAction();
             Destroy(gameObject);
         });
-        NoButton.onClick.AddListener(() =>
+        mNoButton.onClick.AddListener(() =>
         {
             Destroy(gameObject);
         });
 
-        ConfirmButton.gameObject.SetActive(false);
+        mConfirmButton.gameObject.SetActive(false);
     }
 }
+    

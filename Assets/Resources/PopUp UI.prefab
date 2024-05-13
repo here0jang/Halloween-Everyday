@@ -1107,10 +1107,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ebc5ad045637648acd932ca5bec49e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MessageText: {fileID: 1394144120479831656}
-  ConfirmButton: {fileID: 3421024229396661933}
-  YesButton: {fileID: 6596060219771805072}
-  NoButton: {fileID: 2864335378851997573}
+  mMessageText: {fileID: 1394144120479831656}
+  mConfirmButton: {fileID: 3421024229396661933}
+  mYesButton: {fileID: 6596060219771805072}
+  mNoButton: {fileID: 2864335378851997573}
 --- !u!1 &9112124260256211413
 GameObject:
   m_ObjectHideFlags: 0
