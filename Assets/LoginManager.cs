@@ -6,7 +6,6 @@ public class LoginManager : MonoBehaviour
 {
     public async void OnLoginClickedAsync()
     {
-        // TODO : Addressable ·Î º¯°æ
         GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
 
         Exception exception = await LobbyManager.Authenticate();

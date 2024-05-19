@@ -1,15 +1,14 @@
+using MameshibaGames.Kekos.CharacterEditorScene.Customization;
+using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using System.Threading.Tasks;
-using MameshibaGames.Kekos.CharacterEditorScene.Customization;
-using Unity.Netcode;
-using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
-public class OutfitManager : NetworkBehaviour
+public class OutfitTogetherSceneManager : NetworkBehaviour
 {
-    [SerializeField] private TMPro.TMP_Text mLimitText;
-    //[SerializeField] private TMPro.TMP_Text mNicNameText;
+    [SerializeField] private TMPro.TMP_Text mTimerText;
     [SerializeField] private TMPro.TMP_Text mKeywordText;
+    //[SerializeField] private TMPro.TMP_Text mDescText;
     [SerializeField] private GameObject mLoading;
 
     [SerializeField] private CustomizationMediator mCustomizationMediator;
@@ -17,7 +16,7 @@ public class OutfitManager : NetworkBehaviour
     private List<ulong> mConnectedClients = new List<ulong>();
 
 
-    public static OutfitManager Instance { get; private set; }
+    public static OutfitTogetherSceneManager Instance { get; private set; }
     private void Awake()
     {
         if (Instance == null)
@@ -44,7 +43,7 @@ public class OutfitManager : NetworkBehaviour
             return;
         }
 
-        Debug.Log("모든 플레이어 도착 "  + mConnectedClients.Count);
+        Debug.Log("모든 플레이어 도착 " + mConnectedClients.Count);
         StartOutFitClientRpc();
     }
 
@@ -56,35 +55,66 @@ public class OutfitManager : NetworkBehaviour
 
     private async void startOutfitAsync()
     {
-        // 키워드, 닉네임
+        // 몸 버튼 막기
+
+
+        // 로딩
+        mLoading.SetActive(false);
+
+
+        // 첫번째 키워드 가져오기
+        mKeywordText.text = "머리는 내가 할게";
         PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
         mPlayerManager.GetKeywordServerRpc();
         await Task.Delay(3000);
-
-        mLoading.SetActive(false);
         mKeywordText.text = "<color=#6D60CC>" + mPlayerManager.mCurKeyword.Value + "</color>로 꾸미세요!";
-        //NicNameText.text = mPlayerManager.mCurNicName.Value + "<color=#6D60CC>의 퀴즈</color>";
+        //mDescText.text = "머리는 내가 할게";
 
 
-        // 타이머
+        // 타이머 시작
         float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.OUTFIT_COUNT; /* 하드웨어 시간 이용 */
         while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
         {
-            mLimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
+            mTimerText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
             await Task.Yield();
         }
 
-
-        // 스타일 저장
+        // 로딩
         mLoading.SetActive(true);
+
+
+        // 머리 스타일 저장
         string styleId = mCustomizationMediator.SaveSettings();
         mPlayerManager.SetCurStyleServerRpc(styleId);
 
+        // 로딩
+        mLoading.SetActive(false);
+
+
+        // 두번째 키워드 & 스타일 가져오기
+        mKeywordText.text = "옷은 내가 입힐게";
+        mPlayerManager.GetKeywordServerRpc();
+        mPlayerManager.GetStyleServerRpc();
+        await Task.Delay(3000);
+        mKeywordText.text = "<color=#6D60CC>" + mPlayerManager.mCurKeyword.Value + "</color>로 꾸미세요!";
+        mCustomizationMediator.LoadSettings(mPlayerManager.mCurStyle.Value.ToString());
+        //mDescText.text = "옷은 내가 입힐게";
+
+        // 머리 버튼 막기
+
+
+
+
+        // 타이머 시작
+        timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.OUTFIT_COUNT; /* 하드웨어 시간 이용 */
+        while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
+        {
+            mTimerText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
+            await Task.Yield();
+        }
+
+        // 두번째 스타일 저장
 
         // 퀴즈 이동
-        if (NetworkManager.Singleton.IsHost)
-        {
-            NetworkManager.Singleton.SceneManager.LoadScene("05 QUIZ", LoadSceneMode.Single);
-        }
     }
 }

@@ -1,27 +1,48 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Services.Relay.Models;
+using Unity.Services.Relay;
 using UnityEngine;
+
 
 public enum EGameMode
 {
-    Relay,
+    Normal,
     Together,
+    Chaos,
+    RealTime,
 }
+
+
 
 public class LobbyManager : MonoBehaviour
 {
+
     private static Lobby curLobby = null;
     public static Lobby CurLobby { get { return curLobby; }}
 
-    public const float LOBBY_UPDATE_TIMER_MAX = 2.1f;
-    public const int KEYWORD_COUNT = 15;
+    private static Dictionary<string, string> localLobbyData = new Dictionary<string, string>();
+    public static Dictionary<string, string> LocalLobbyData { get { return localLobbyData; } }
+    public List<List<Dictionary<string, string>>> LocalPlayerDatas = new List<List<Dictionary<string, string>>>();
+
+    // KEY : id, VALUE : keyword, styleId, answer...
+    public static List<Dictionary<string, List<string>>> PlayData = new List<Dictionary<string, List<string>>>();
+    //public static Dictionary<string, string> keywords = new Dictionary<string, string>();
+
+
+    public const float LOBBY_UPDATE_TIMER_MAX = 1.1f;
+    public const int KEYWORD_COUNT = 20;
     public const int OUTFIT_COUNT = 10;
-    public const int QUIZ_COUNT = 30;
+    public const int QUIZ_COUNT = 100;
+    public const int TOGETHER_MODE_MIN = 4;
 
     private float lobbyUpdateTimer = 0f;
     private float heartBeatTimer      = 0f;
@@ -40,8 +61,18 @@ public class LobbyManager : MonoBehaviour
     }
     private void Update()
     {
+
         handleLobbyHeartBeat();
         handleLobbyPollForUpdates();
+    }
+
+    private async void OnApplicationQuit()
+    {
+        if(curLobby != null)
+        {
+            await LeaveRoom();
+            //LobbyService.Instance.DeleteLobbyAsync(curLobby.Id);
+        }
     }
 
 
@@ -121,7 +152,7 @@ public class LobbyManager : MonoBehaviour
     //
     // CREATE & JOIN ROOM
     //
-    public static async Task<bool> CreateRoomAsync(string lobbyName, string topic = "veggies", EGameMode gameMode = EGameMode.Relay, int maxMember = 2, bool IsPrivate = false)
+    public async Task<bool> CreateRoomAsync(string lobbyName, string topic = "veggies", int topicIndex = 0, EGameMode gameMode = EGameMode.Normal, int maxMember = 2, bool IsPrivate = false)
     {
         try
         {
@@ -131,12 +162,16 @@ public class LobbyManager : MonoBehaviour
             {
                 // private : id, 코드로만 참여 가능
                 {"Topic", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: topic)},
-                {"IsStarted", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "1")},
+                {"TopicIndex", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: topicIndex.ToString())},
+                {"RelayCode", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "")},
                 {"GameMode", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: gameMode.ToString())},
             };
 
             curLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxMember, lobbyOptions);
-            Debug.Log("lobby created successfully, lobby topic : " + curLobby.Data["Topic"].Value + " Room State : " + curLobby.IsPrivate + " GameMode : "  + curLobby.Data["GameMode"].Value);
+            Debug.Log("lobby created successfully, lobby topic : " + curLobby.Data["Topic"].Value + " Room State : " + curLobby.IsPrivate + " GameMode : " + curLobby.Data["GameMode"].Value);
+            
+            localLobbyData.Add("Topic", topic);
+            localLobbyData.Add("GameMode", gameMode.ToString());
 
             return true;
         }
@@ -146,7 +181,9 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-    public static async Task<bool> JoinRandomRoom()
+
+
+    public async Task<bool> JoinRandomRoom()
     {
         try
         {
@@ -161,7 +198,9 @@ public class LobbyManager : MonoBehaviour
             {
                 await Lobbies.Instance.JoinLobbyByIdAsync(queryResponse.Results[0].Id);
                 curLobby = queryResponse.Results[0];
+
                 Debug.Log("Joined Room : " + curLobby.Data["Topic"].Value);
+
                 return true;
             }
         }
@@ -181,16 +220,19 @@ public class LobbyManager : MonoBehaviour
     //
     // WAITING
     //
-    public static async Task<bool> StartGame()
+    public async Task<bool> StartGame(string relayCode)
     {
         try
         {
             UpdateLobbyOptions options = new UpdateLobbyOptions();
+            // 이제 새로운 플레이어 더 못들어오도록
+            options.IsPrivate = true;
             options.Data = new Dictionary<string, DataObject>()
             {
-                {"IsStarted", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: "0")},
+                {"RelayCode", new DataObject(visibility: DataObject.VisibilityOptions.Public, value: relayCode)},
             };
             curLobby = await Lobbies.Instance.UpdateLobbyAsync(CurLobby.Id, options);
+
             return true;
         }
         catch (LobbyServiceException e)
@@ -200,11 +242,44 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    public async Task<string> StartHostWithRelay(int maxConnections = 5)
+    {
+        Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
+        var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));
+
+        return NetworkManager.Singleton.StartHost() ? joinCode : null;
+    }
+
+    public async void StartClientWithRelay(string joinCode)
+    {
+        try
+        {
+            var joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode: joinCode);
+
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(joinAllocation, "dtls"));
+
+            NetworkManager.Singleton.StartClient();
+
+            //return !string.IsNullOrEmpty(joinCode) && NetworkManager.Singleton.StartClient();
+        }
+        catch(RelayServiceException e)
+        {
+            Debug.Log(e);
+        }
+
+
+
+    }
+
+
+    // 데이터 전송??? 
+
     //-----------------------------------------------------------------------
     //
     // PLAYER DATA
     //
-
     public static async Task<bool> SetPlayerData(string _key, string _value)
     {
         try
@@ -274,20 +349,21 @@ public class LobbyManager : MonoBehaviour
     // QUIT
     //
 
-    public static async void migrateHost()
+    public async void migrateHost()
     {
         try
         {
-            curLobby = await Lobbies.Instance.UpdateLobbyAsync(curLobby.Id,
-                new UpdateLobbyOptions { HostId = curLobby.Players[1].Id });
+            curLobby = await Lobbies.Instance.UpdateLobbyAsync(curLobby.Id, new UpdateLobbyOptions { HostId = curLobby.Players[1].Id });
         }
         catch (LobbyServiceException e)
         {
             Debug.LogError(e);
         }
     }
-    public static async Task<bool> LeaveRoom()
+    public async Task<bool> LeaveRoom()
     {
+        //LobbyEvents.OnLobbyUpdated -= OnLobbyUpdated;
+
         try
         {
             if (curLobby.Players.Count > 1)
@@ -308,7 +384,10 @@ public class LobbyManager : MonoBehaviour
             }
 
             Debug.Log("Leaved Lobby");
+            localLobbyData.Clear();
+            //LobbyEvents.OnLobbyUpdated -= OnLobbyUpdated;
             curLobby = null;
+
             return true;
         }
         catch (LobbyServiceException e)
@@ -317,6 +396,7 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
+
 
 
 

@@ -1310,6 +1310,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1205099147377827453, guid: c438f0be201593d44bc6653cf10fde96, type: 3}
+      propertyPath: Keywords.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3177307261447854264, guid: c438f0be201593d44bc6653cf10fde96, type: 3}
       propertyPath: m_Name
       value: Lobby Manager

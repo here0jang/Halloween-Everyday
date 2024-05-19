@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 32
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 747d8ff03ecf42f44a48b84cfe867eba, type: 3}
+  m_Name: TopicKeyword
+  m_EditorClassIdentifier: 
+  Items:
+  - Topic: 
+    Keywords: []
+  - Topic: "\uACFC\uC77C"
+    Keywords:
+    - "\uC0AC\uACFC\r"
+    - "\uB538\uAE30\r"
+    - "\uBC14\uB098\uB098\r"
+  - Topic: "\uCC44\uC18C"
+    Keywords:
+    - "\uC624\uC774\r"
+    - "\uACE0\uAD6C\uB9C8\r"
+    - "\uC591\uBC30\uCD94\r"
+  - Topic: "\uAE30\uD68D\uC0AC"
+    Keywords:
+    - "SM\r"
+    - "YG\r"
+    - "HYBE\r"
+    - "JYP\r"
+    - "CUBE\r"
