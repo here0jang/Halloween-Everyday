@@ -1,24 +1,18 @@
-using UnityEngine;
 using System;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
-using UnityEngine.UI;
 
 public class KeywordSceneManager : MonoBehaviour
 {
     [SerializeField] private TMPro.TMP_Text mLimitText;
     [SerializeField] private TMPro.TMP_Text mTopicText;
-
     [SerializeField] private TMPro.TMP_InputField mKeywordInput;
-
     [SerializeField] private GameObject mRandomButton;
-
     [SerializeField] private GameObject mLoading;
 
     [SerializeField] private TopicKeywordData mTopicKeywordData;
-
-
     private int mTopicIndex = 0;
 
 
@@ -31,6 +25,7 @@ public class KeywordSceneManager : MonoBehaviour
         mTopicText.text = "주제 : " + LobbyManager.CurLobby.Data["Topic"].Value;
         mTopicIndex = Int32.Parse(LobbyManager.CurLobby.Data["TopicIndex"].Value);
         mRandomButton.SetActive(mTopicIndex != 0);
+        OnRandomButtonClicked();
 
         // 타이머
         float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.KEYWORD_COUNT; /* 하드웨어 시간 이용 */
