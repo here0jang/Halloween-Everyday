@@ -8,15 +8,11 @@ public class WaitingSceneManager : MonoBehaviour
 {
     [SerializeField] private TMPro.TMP_Text mTopicText;
     [SerializeField] private TMPro.TMP_Text mGameModeText;
-
     [SerializeField] private TMPro.TMP_Text mPlayerCountText;
-
     //[SerializeField] private TMPro.TMP_InputField mNicNameInput;
     [SerializeField] private GameObject InviteCode;
     [SerializeField] private TMPro.TMP_Text InviteCodeText;
-
     [SerializeField] private TMPro.TMP_Text InstructionText;
-
     [SerializeField] private GameObject StartButton;
 
     public LobbyManager LobbyManager;
@@ -115,25 +111,23 @@ public class WaitingSceneManager : MonoBehaviour
     public void OnExitClicked()
     {
         PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
-        popUp.InstantiatePopUp("정말 퇴장하시겠습니까?", exitAsync);
-    }
-
-    private async void exitAsync()
-    {
-        GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
-
-        bool exited = await LobbyManager.LeaveRoom();
-        if (exited)
+        popUp.InstantiatePopUp("정말 퇴장하시겠습니까?", async () => 
         {
-            SceneManager.LoadScene("01 MAIN");
-        }
-        else
-        {
-            Destroy(loading);
-            // TODO : 플레이어가 해결할 수 있는 원인일 경우 안내 메시지 추가 (에러코드로 분류)
-            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
-            popUp.InstantiatePopUp("퇴장 실패");
-        }
+            GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
+
+            bool exited = await LobbyManager.LeaveRoom();
+            if (exited)
+            {
+                SceneManager.LoadScene("01 MAIN");
+            }
+            else
+            {
+                Destroy(loading);
+                // TODO : 플레이어가 해결할 수 있는 원인일 경우 안내 메시지 추가 (에러코드로 분류)
+                PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+                popUp.InstantiatePopUp("퇴장 실패");
+            }
+        }); ;
     }
 
     private void OnLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
@@ -143,7 +137,7 @@ public class WaitingSceneManager : MonoBehaviour
 
         if (sceneName == "04 OUTFIT_" + EGameMode.Normal.ToString())
         {
-            OutfitManager.Instance.OutfitSceneInit(clientId);
+            OutfitNormalSceneManager.Instance.OutfitSceneInit(clientId);
         }
         else if (sceneName == "04 OUTFIT_" + EGameMode.Together.ToString())
         {
