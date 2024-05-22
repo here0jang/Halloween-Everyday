@@ -50,6 +50,8 @@ public class KeywordSceneManager : MonoBehaviour
         }
     }
 
+
+    // 주제에 맞는 랜덤 키워드
     public void OnRandomButtonClicked()
     {
         if(mTopicIndex != 0)
