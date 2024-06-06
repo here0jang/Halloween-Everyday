@@ -11,7 +11,7 @@ public class GuessNormalSceneManager : NetworkBehaviour
     [SerializeField] private ItemDatabase[] mItemDatabases = new ItemDatabase[(int)EItems.last];
     [SerializeField] private SkinnedMeshRenderer mSkinMeshRenderers;
 
-    // Start is called before the first frame update
+
     private async void Start()
     {
         PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
@@ -21,7 +21,7 @@ public class GuessNormalSceneManager : NetworkBehaviour
 
 
         #region Timer
-        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + GameCount.OUTFIT_COUNT; /* 하드웨어 시간 이용 */
+        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + GameCount.GUESS_COUNT; /* 하드웨어 시간 이용 */
         while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
         {
             mLimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
@@ -31,6 +31,7 @@ public class GuessNormalSceneManager : NetworkBehaviour
 
 
         // 정답 저장
+        MultiplayerManager.Instance.AddAnswerServerRpc((ulong)index, (ulong)mPlayerManager.mMyIndex.Value, mInputField.text);
 
 
 

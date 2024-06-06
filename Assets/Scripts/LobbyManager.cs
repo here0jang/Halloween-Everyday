@@ -64,6 +64,7 @@ public static class GameCount
     public const int LOADING_COUNT = 5;
     public const int KEYWORD_COUNT = 5;
     public const int OUTFIT_COUNT = 10;
+    public const int GUESS_COUNT = 10;
     public const int QUIZ_COUNT = 100;
     public const int TOGETHER_MODE_MIN = 4;
 }

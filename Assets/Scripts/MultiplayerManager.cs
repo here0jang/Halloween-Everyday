@@ -153,6 +153,9 @@ public class MultiplayerManager : NetworkBehaviour
 {
     public NetworkVariable<int> mConnectedCount;
 
+
+    // ulong, int ¸ÂÃß±â!!!
+
     public NetworkList<QuizData> mQuizDatas;
 
     public NetworkList<StyleData> mStyleDatas;
