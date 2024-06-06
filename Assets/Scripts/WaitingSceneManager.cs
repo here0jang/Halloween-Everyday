@@ -1,68 +1,114 @@
+using System;
 using System.Collections;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class WaitingSceneManager : MonoBehaviour
 {
     [SerializeField] private TMPro.TMP_Text mTopicText;
     [SerializeField] private TMPro.TMP_Text mGameModeText;
+    //[SerializeField] private TMPro.TMP_Text mNicNameText;
     [SerializeField] private TMPro.TMP_Text mPlayerCountText;
-    //[SerializeField] private TMPro.TMP_InputField mNicNameInput;
-    [SerializeField] private GameObject InviteCode;
-    [SerializeField] private TMPro.TMP_Text InviteCodeText;
-    [SerializeField] private TMPro.TMP_Text InstructionText;
-    [SerializeField] private GameObject StartButton;
+    
 
-    public LobbyManager LobbyManager;
+    [SerializeField] private Button mReadyStartButton;
+    [SerializeField] private TMPro.TMP_Text mDescText;  
+    [SerializeField] private Button mExitButton;
+    [SerializeField] private GameObject mInviteCode;
+    [SerializeField] private TMPro.TMP_Text mInviteCodeText;
+    [SerializeField] private Button mCopyCodeButton;
+    [SerializeField] private Button mChangeTopicGameModeButton;
 
-    private int mPlayerMax = 0;
+    [SerializeField] private TopicKeywordData mTopicKeywordData;
+
+    private const string NICNAME = "별명";
+
     private string mMyId = "";
+    private string mHostId = "";
 
     private float mTimer = 0f;
     private bool mIsStarted = false;
 
+    private void Awake()
+    {
+        int topicIndex = Int32.Parse(LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC_INDEX].Value);
+        //mKeywordInput.text = mTopicKeywordData.Items[topicIndex].Keywords[UnityEngine.Random.Range(0, mTopicKeywordData.Items[topicIndex].Keywords.Count)];
+
+        //mRandomKeywordButton.onClick.RemoveAllListeners();
+        //mRandomKeywordButton.onClick.AddListener(() => 
+        //{
+        //    mKeywordInput.text = mTopicKeywordData.Items[topicIndex].Keywords[UnityEngine.Random.Range(0, mTopicKeywordData.Items[topicIndex].Keywords.Count)];
+        //});
+
+        mChangeTopicGameModeButton.onClick.RemoveAllListeners();
+        mChangeTopicGameModeButton.onClick.AddListener(onChangeTopicGameModeClicked);
+
+        mCopyCodeButton.onClick.RemoveAllListeners();
+        mCopyCodeButton.onClick.AddListener(onCopyCodeClicked);
+    }
 
     private IEnumerator Start()
     {
-        mTopicText.text = LobbyManager.CurLobby.Data["Topic"].Value;
-        mPlayerMax = LobbyManager.CurLobby.MaxPlayers;
         mMyId = AuthenticationService.Instance.PlayerId;
+        //mNicNameText.text = NICNAME;
+        mHostId = LobbyManager.CurLobby.HostId;
 
-        switch (LobbyManager.CurLobby.Data["GameMode"].Value)
-        {
-            case "Normal":
-                {
-                    mGameModeText.text = "일반 모드";
-                    break;
-                }
-            case "Together":
-                {
-                    mGameModeText.text = "반반 모드";
-                    break;
-                }
-            case "Chaos":
-                {
-                    mGameModeText.text = "카오스 모드";
-                    break;
-                }
-            case "RealTime":
-                {
-                    mGameModeText.text = "실시간 모드";
-                    break;
-                }
-            default:
-                {
-                    mGameModeText.text = "일반 모드";
-                    break;
-                }
-        }
+        #region Init UI
+        mDescText.text = mMyId == mHostId ? "시작하기 버튼을 누르면 게임이 시작됩니다. " : "방장이 게임을 시작할 때까지 기다리세요.";
+        mReadyStartButton.gameObject.SetActive(mMyId == mHostId);
+        mInviteCodeText.text = mMyId == mHostId ? LobbyManager.CurLobby.LobbyCode : string.Empty;
+        mInviteCode.SetActive(mMyId == mHostId);
+        mChangeTopicGameModeButton.gameObject.SetActive(mMyId == mHostId);
+        #endregion
+
+        updateTopicGamemodePlayercount();
 
         yield return new WaitUntil(() => NetworkManager.Singleton.SceneManager != null);
 
         NetworkManager.Singleton.SceneManager.OnLoadComplete -= OnLoadComplete;
         NetworkManager.Singleton.SceneManager.OnLoadComplete += OnLoadComplete;
+    }
+
+    private void updateTopicGamemodePlayercount()
+    {
+        mPlayerCountText.text = $"  {LobbyManager.CurLobby.Players.Count} / {LobbyManager.MAX_PLAYER}";
+
+        mTopicText.text = LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC].Value;
+
+        #region GameMode UI
+        switch (LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value)
+        {
+            case GameMode.NORMAL:
+                {
+                    mGameModeText.text = "일반 모드";
+                    break;
+                }
+            case GameMode.TOGETHER:
+                {
+                    mGameModeText.text = "반반 모드";
+                    break;
+                }
+            case GameMode.REALTIME:
+                {
+                    mGameModeText.text = "실시간 모드";
+                    break;
+                }
+            case GameMode.QUIZ:
+                {
+                    mGameModeText.text = "퀴즈 모드";
+                    break;
+                }
+            default:
+                {
+                    Debug.Assert(false, "wrong Game Mode!");
+                    mGameModeText.text = "일반 모드";
+                    break;
+                }
+        }
+        #endregion
     }
 
     private void Update()
@@ -72,26 +118,20 @@ public class WaitingSceneManager : MonoBehaviour
         {
             mTimer = LobbyManager.LOBBY_UPDATE_TIMER_MAX;
 
-            mPlayerCountText.text = $"{LobbyManager.CurLobby.Players.Count}/{mPlayerMax}";
-
-            string hostId = LobbyManager.CurLobby.HostId;
-            InviteCodeText.text = mMyId == hostId ? LobbyManager.CurLobby.LobbyCode : string.Empty;
-            InviteCode.SetActive(mMyId == hostId);
-            InstructionText.text = mMyId == hostId ? "시작하기 버튼을 누르면 게임이 시작됩니다. " : "방장이 게임을 시작할 때까지 기다리세요.";
-            StartButton.SetActive(mMyId == hostId);
-
-
-            string joinCode = LobbyManager.CurLobby.Data["RelayCode"].Value;
-            if (joinCode != "" && mMyId != hostId && !mIsStarted)
+            string joinCode = LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_RELAY_CODE].Value;
+            if (joinCode != "" && mMyId != mHostId && !mIsStarted)
             {
                 mIsStarted = true;
                 GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
                 LobbyManager.StartClientWithRelay(joinCode);
-                LobbyManager.mCurSceneName = "03 KEYWORD";
+                LobbyManager.mCurSceneName = SceneName.LOGIN_SCENE;
             }
+
+            updateTopicGamemodePlayercount();
         }
     }
-    public async void OnStartClickedAsync()
+
+    public async void OnReadyStartClickedAsync()
     {
         GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
 
@@ -99,20 +139,30 @@ public class WaitingSceneManager : MonoBehaviour
         bool IsStarted = await LobbyManager.StartGame(relayCode);
         if (IsStarted)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("03 KEYWORD", LoadSceneMode.Single);
-            LobbyManager.mCurSceneName = "03 KEYWORD";
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneName.LOADING_SCENE, LoadSceneMode.Single);
+            LobbyManager.mCurSceneName = SceneName.LOADING_SCENE;
         }
         else
         {
             Destroy(loading);
-            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+            PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>(PopUpUIManager.RESOURCE_NAME));
             popUp.InstantiatePopUp("시작 실패");
         }
     }
 
+    private void onChangeTopicGameModeClicked()
+    {
+
+    }
+
+    private void onCopyCodeClicked()
+    {
+
+    }
+
     public void OnExitClicked()
     {
-        PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+        PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>(PopUpUIManager.RESOURCE_NAME));
         popUp.InstantiatePopUp("정말 퇴장하시겠습니까?", async () => 
         {
             GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
@@ -120,13 +170,12 @@ public class WaitingSceneManager : MonoBehaviour
             bool exited = await LobbyManager.LeaveRoom();
             if (exited)
             {
-                SceneManager.LoadScene("01 MAIN");
+                SceneManager.LoadScene(SceneName.MAIN_SCENE);
             }
             else
             {
                 Destroy(loading);
-                // TODO : 플레이어가 해결할 수 있는 원인일 경우 안내 메시지 추가 (에러코드로 분류)
-                PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>("PopUp UI"));
+                PopUpUIManager popUp = Instantiate(Resources.Load<PopUpUIManager>(PopUpUIManager.RESOURCE_NAME));
                 popUp.InstantiatePopUp("퇴장 실패");
             }
         }); ;
@@ -137,17 +186,37 @@ public class WaitingSceneManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer)
             return;
 
-        if (sceneName == "04 OUTFIT_" + EGameMode.Normal.ToString())
+
+        switch(sceneName)
         {
-            OutfitNormalSceneManager.Instance.OutfitSceneInit(clientId);
-        }
-        else if (sceneName == "04 OUTFIT_" + EGameMode.Together.ToString())
-        {
-            OutfitTogetherSceneManager.Instance.OutfitSceneInit(clientId);
-        }
-        else if (sceneName == "05 QUIZ")
-        {
-            QuizNormalSceneManager.Instance.QuizSceneInit(clientId);
+            case SceneName.KEYWORD_SCENE:
+                {
+                    KeywordSceneManager.Instance.KeywordSceneInit(clientId);
+                    break;
+                }
+            case SceneName.OUTFIT_SCENE + GameMode.NORMAL:
+                {
+                    OutfitNormalSceneManager.Instance.OutfitSceneInit(clientId);
+                    break;
+                }
+            case SceneName.GUESS_SCENE + GameMode.NORMAL:
+                {
+                    break;
+                }
+
+            case SceneName.OUTFIT_SCENE + GameMode.TOGETHER:
+                {
+                    OutfitTogetherSceneManager.Instance.OutfitSceneInit(clientId);
+                    break;
+                }
+            case SceneName.OUTFIT_SCENE + GameMode.REALTIME:
+                {
+                    break;
+                }
+            default:
+                {
+                    break;
+                }
         }
     }
 }

@@ -1,10 +1,11 @@
-using System;
+癤퓎sing System;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Unity.Netcode;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
-public class KeywordSceneManager : MonoBehaviour
+public class KeywordSceneManager : NetworkBehaviour
 {
     [SerializeField] private TMPro.TMP_Text mLimitText;
     [SerializeField] private TMPro.TMP_Text mTopicText;
@@ -14,48 +15,81 @@ public class KeywordSceneManager : MonoBehaviour
 
     [SerializeField] private TopicKeywordData mTopicKeywordData;
     private int mTopicIndex = 0;
+    private List<ulong> mConnectedClients = new List<ulong>();
 
+    public static KeywordSceneManager Instance { get; private set; }
 
-    public async void Start()
+    private void Awake()
     {
-        // 로딩
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void KeywordSceneInit(ulong id)
+    {
+        if (!NetworkManager.Singleton.IsHost)
+        {
+            return;
+        }
+
+        mConnectedClients.Add(id);
+
+
+        if (mConnectedClients.Count < NetworkManager.Singleton.ConnectedClients.Count)
+        {
+            return;
+        }
+
+        StartKeywordClientRpc();
+    }
+
+    [ClientRpc]
+    private void StartKeywordClientRpc()
+    {
+        startKeywordAsync();
+    }
+
+    private async void startKeywordAsync()
+    {
+        #region Init UI
         mLoading.SetActive(false);
 
-        // 주제
-        mTopicText.text = "주제 : " + LobbyManager.CurLobby.Data["Topic"].Value;
-        mTopicIndex = Int32.Parse(LobbyManager.CurLobby.Data["TopicIndex"].Value);
+        mTopicText.text = "二쇱젣 : " + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC].Value;
+        mTopicIndex = Int32.Parse(LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC_INDEX].Value);
         mRandomButton.SetActive(mTopicIndex != 0);
         OnRandomButtonClicked();
+        #endregion
 
-        // 타이머
-        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + LobbyManager.KEYWORD_COUNT; /* 하드웨어 시간 이용 */
+        #region Timer
+        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + GameCount.KEYWORD_COUNT;
         while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
         {
             mLimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
             await Task.Yield();
         }
 
-        // 로딩 
         mLoading.SetActive(true);
+        #endregion
 
-        // 키워드 저장
-       // MultiplayerManager.Instance.mKeywords.Add(mKeywordInput.text);
         PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
-        mPlayerManager.SendKeywordServerRpc(mKeywordInput.text);
+        MultiplayerManager.Instance.AddDataServerRpc((ulong)mPlayerManager.mMyIndex.Value, mKeywordInput.text);
 
 
-        // 옷입히기 이동
         if (NetworkManager.Singleton.IsHost)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("04 OUTFIT_" + LobbyManager.CurLobby.Data["GameMode"].Value, LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneName.OUTFIT_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
         }
     }
 
-
-    // 주제에 맞는 랜덤 키워드
     public void OnRandomButtonClicked()
     {
-        if(mTopicIndex != 0)
+        if (mTopicIndex != 0)
         {
             mKeywordInput.text = mTopicKeywordData.Items[mTopicIndex].Keywords[UnityEngine.Random.Range(0, mTopicKeywordData.Items[mTopicIndex].Keywords.Count)];
         }

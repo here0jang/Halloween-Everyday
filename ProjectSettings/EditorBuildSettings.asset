@@ -15,16 +15,19 @@ EditorBuildSettings:
     path: Assets/Scenes/02 WAITING.unity
     guid: 94d392f6e75f213448030db6a1c7d86a
   - enabled: 1
-    path: Assets/Scenes/03 KEYWORD.unity
+    path: Assets/Scenes/03 LOADING.unity
+    guid: dd7be35514d11954eab3f528626708f2
+  - enabled: 1
+    path: Assets/Scenes/04 KEYWORD.unity
     guid: 63e38767dbe360947a4bfcd5ae954e22
   - enabled: 1
-    path: Assets/Scenes/04 OUTFIT.unity
-    guid: 76a007d1a17f1e540b5209f7d23550ac
+    path: Assets/Scenes/05 OUTFIT_Normal.unity
+    guid: 2c1242f442cef1f48b49f57fa88d6f16
   - enabled: 1
-    path: Assets/Scenes/05 QUIZ.unity
-    guid: 69a1564f6f7658540ac0baf3581ff834
+    path: Assets/Scenes/06 GUESS_Normal.unity
+    guid: 9f4161352b756d845a78a4cf3d5b7518
   - enabled: 1
-    path: Assets/Scenes/06 RESULT.unity
-    guid: 44371ed016b16184cbffcb14c6c3e2cb
+    path: Assets/Scenes/07 SHOW_Normal.unity
+    guid: 9408782101d77c84c8c29340af2da7ed
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: cb7ae808e7a365a48b4957ca41002247, type: 2}

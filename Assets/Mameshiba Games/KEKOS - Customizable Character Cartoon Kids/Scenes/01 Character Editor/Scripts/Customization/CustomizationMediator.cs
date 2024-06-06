@@ -100,13 +100,14 @@ namespace MameshibaGames.Kekos.CharacterEditorScene.Customization
         {
             if (loadSavedData)
             {
-                LoadSettings();
+                //LoadSettings();
             }
         }
 
-        public void LoadSettings()
+        public void LoadSettings(string id)
         {
-            string savedCharacterJson = PlayerPrefs.GetString("KEKOS_SavedCharacter", "");
+            //string savedCharacterJson = PlayerPrefs.GetString("KEKOS_SavedCharacter", "");
+            string savedCharacterJson = id;
             if (string.IsNullOrEmpty(savedCharacterJson)) return;
 
             SaveCustomizationModel saveCustomizationModel = JsonUtility.FromJson<SaveCustomizationModel>(savedCharacterJson);
