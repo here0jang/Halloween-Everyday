@@ -27,7 +27,20 @@ public class PopUpUIManager : MonoBehaviour
         mNoButton.gameObject.SetActive(false);
     }
 
-    public void InstantiatePopUp(string message, Action yesAction)
+    public void InstantiatePopUp(string message, Action confirmAction)
+    {
+        mMessageText.text = message;
+        mConfirmButton.onClick.AddListener(() =>
+        {
+            confirmAction();
+            Destroy(gameObject);
+        });
+
+        mYesButton.gameObject.SetActive(false);
+        mNoButton.gameObject.SetActive(false);
+    }
+
+    public void InstantiatePopUp(string message, Action yesAction, Action noAction = null)
     {
         mMessageText.text = message;
 
@@ -38,6 +51,10 @@ public class PopUpUIManager : MonoBehaviour
         });
         mNoButton.onClick.AddListener(() =>
         {
+            if(noAction!= null)
+            {
+                noAction();
+            }
             Destroy(gameObject);
         });
 

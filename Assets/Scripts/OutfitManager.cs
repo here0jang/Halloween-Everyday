@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Threading.Tasks;
-using MameshibaGames.Kekos.CharacterEditorScene.Customization;
+//using MameshibaGames.Kekos.CharacterEditorScene.Customization;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ public class OutfitManager : NetworkBehaviour
     [SerializeField] private TMPro.TMP_Text mKeywordText;
     [SerializeField] private GameObject mLoading;
 
-    [SerializeField] private CustomizationMediator mCustomizationMediator;
+    //[SerializeField] private CustomizationMediator mCustomizationMediator;
 
     private List<ulong> mConnectedClients = new List<ulong>();
 
@@ -62,7 +62,7 @@ public class OutfitManager : NetworkBehaviour
         await Task.Delay(3000);
 
         mLoading.SetActive(false);
-        //mKeywordText.text = "<color=#6D60CC>" + mPlayerManager.mCurKeyword.Value + "</color>로 꾸미세요!";
+        //mKey//wordText.text = "<color=#6D60CC>" + mPlayerManager.mCurKeyword.Value + "</color>로 꾸미세요!";
         //NicNameText.text = mPlayerManager.mCurNicName.Value + "<color=#6D60CC>의 퀴즈</color>";
 
 
@@ -77,7 +77,7 @@ public class OutfitManager : NetworkBehaviour
 
         // 스타일 저장
         mLoading.SetActive(true);
-        string styleId = mCustomizationMediator.SaveSettings();
+        //string styleId = mCustomizationMediator.SaveSettings();
         //mPlayerManager.SetCurStyleServerRpc(styleId);
 
 

@@ -23,6 +23,7 @@ public class LoginManager : MonoBehaviour
         mLoginButton.onClick.RemoveAllListeners();
         mLoginButton.onClick.AddListener(async () => 
         {
+
         GameObject loading = Instantiate(Resources.Load<GameObject>("Loading UI"));
 
         try

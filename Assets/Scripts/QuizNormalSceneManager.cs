@@ -3,8 +3,8 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
-using MameshibaGames.Kekos.RuntimeExampleScene.Spawner;
-using MameshibaGames.Common.Helpers;
+//using MameshibaGames.Kekos.RuntimeExampleScene.Spawner;
+//using MameshibaGames.Common.Helpers;
 
 public class QuizNormalSceneManager : NetworkBehaviour
 {
@@ -16,7 +16,7 @@ public class QuizNormalSceneManager : NetworkBehaviour
     public List<KeywordButton> KeywordButtons = new List<KeywordButton>();
 
 
-    [SerializeField] private CharacterSpawner mCharacterSpawner;
+    //[SerializeField] private CharacterSpawner mCharacterSpawner;
 
     private static List<ulong> mConnectedClients = new List<ulong>();
 
@@ -119,7 +119,7 @@ public class QuizNormalSceneManager : NetworkBehaviour
             }
 
             // 키워드 섞기
-            keywordList.Shuffle();
+            //keywordList.Shuffle();
 
             // 키워드 버튼에 뿌리기
             for (int index = 0; index < KeywordButtons.Count; index++)

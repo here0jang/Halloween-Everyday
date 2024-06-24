@@ -338,9 +338,9 @@ public class OutfitRealTimeSceneManager : NetworkBehaviour
     {
         // 키워드, 닉네임
         PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
-        mPlayerManager.mCurIndex.Value = (mPlayerManager.mCurIndex.Value + 1) % MultiplayerManager.Instance.mConnectedCount.Value;
+        mPlayerManager.mCurIndex.Value = (mPlayerManager.mCurIndex.Value + 1) % (ulong)MultiplayerManager.Instance.mConnectedCount.Value;
         string keyword = MultiplayerManager.Instance.GetAnswer(mPlayerManager.mCurIndex.Value);
-        await Task.Delay(2000);
+        //await Task.Delay(2000);
         mLoading.SetActive(false);
         mKeywordText.text = "<color=#6D60CC>" + keyword + "</color>로 꾸미세요!";
 

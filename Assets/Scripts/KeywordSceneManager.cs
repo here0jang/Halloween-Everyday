@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class KeywordSceneManager : NetworkBehaviour
 {
@@ -18,7 +17,6 @@ public class KeywordSceneManager : NetworkBehaviour
     private List<ulong> mConnectedClients = new List<ulong>();
 
     public static KeywordSceneManager Instance { get; private set; }
-
     private void Awake()
     {
         if (Instance == null)
@@ -30,6 +28,7 @@ public class KeywordSceneManager : NetworkBehaviour
             Destroy(gameObject);
         }
     }
+
 
     public void KeywordSceneInit(ulong id)
     {
@@ -52,46 +51,45 @@ public class KeywordSceneManager : NetworkBehaviour
     [ClientRpc]
     private void StartKeywordClientRpc()
     {
-        startKeywordAsync();
-    }
-
-    private async void startKeywordAsync()
-    {
         #region Init UI
         mLoading.SetActive(false);
 
-        mTopicText.text = "주제 : " + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC].Value;
-        mTopicIndex = Int32.Parse(LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_TOPIC_INDEX].Value);
-        mRandomButton.SetActive(mTopicIndex != 0);
+        mTopicText.text = "<color=#6D60CC>" + mTopicKeywordData.Items[MultiplayerManager.Instance.TopicIndex].Topic + "</color>에는 뭐가 있나요?";
+        mRandomButton.SetActive(MultiplayerManager.Instance.TopicIndex != 0);
         OnRandomButtonClicked();
         #endregion
 
-        #region Timer
-        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + GameCount.KEYWORD_COUNT;
-        while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
+        StartCoroutine(timer());
+    }
+
+    IEnumerator timer()
+    {
+        float timer = GameCount.KEYWORD_COUNT;
+        while (timer > 0)
         {
-            mLimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
-            await Task.Yield();
+            mLimitText.text = timer.ToString();
+            timer--;
+            yield return new WaitForSecondsRealtime(1);
         }
 
         mLoading.SetActive(true);
-        #endregion
+
 
         PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
-        MultiplayerManager.Instance.AddDataServerRpc((ulong)mPlayerManager.mMyIndex.Value, mKeywordInput.text);
+        MultiplayerManager.Instance.AddQuizServerRpc(mPlayerManager.mMyIndex.Value, mKeywordInput.text);
 
 
         if (NetworkManager.Singleton.IsHost)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene(SceneName.OUTFIT_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
+            LoadingSceneManager.Instance.LoadScene(SceneName.OUTFIT_SCENE + MultiplayerManager.Instance.GetGameMode(), true);
         }
     }
 
     public void OnRandomButtonClicked()
     {
-        if (mTopicIndex != 0)
+        if (MultiplayerManager.Instance.TopicIndex != 0)
         {
-            mKeywordInput.text = mTopicKeywordData.Items[mTopicIndex].Keywords[UnityEngine.Random.Range(0, mTopicKeywordData.Items[mTopicIndex].Keywords.Count)];
+            mKeywordInput.text = mTopicKeywordData.Items[MultiplayerManager.Instance.TopicIndex].Keywords[UnityEngine.Random.Range(0, mTopicKeywordData.Items[MultiplayerManager.Instance.TopicIndex].Keywords.Count)];
         }
     }
 }

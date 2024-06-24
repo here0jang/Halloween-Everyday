@@ -146,7 +146,7 @@ namespace CharacterCustomization
             characterAnimator.runtimeAnimatorController = controller;
         }
 
-        private async void Randomize()
+        private void Randomize()
         {
             foreach (var part in _parts)
             {
@@ -161,7 +161,7 @@ namespace CharacterCustomization
                 }
             }
 
-            await Task.Delay(1);
+            //await Task.Delay(1);
 
             SaveCombination();
         }

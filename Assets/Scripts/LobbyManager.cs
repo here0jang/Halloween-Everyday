@@ -1,16 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode.Transports.UTP;
 using Unity.Netcode;
 using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
-using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay.Models;
 using Unity.Services.Relay;
 using UnityEngine;
+using System.Collections;
 
 public enum EItems
 {
@@ -30,27 +29,17 @@ public enum EItems
     last,
 }
 
-public static class SceneName
-{
-    public const string LOGIN_SCENE = "00 LOGIN";
-    public const string MAIN_SCENE = "01 MAIN";
-    public const string WAITING_SCENE = "02 WAITING";
-    public const string LOADING_SCENE = "03 LOADING";
-    public const string KEYWORD_SCENE = "04 KEYWORD";
-    public const string OUTFIT_SCENE = "05 OUTFIT_";
-    public const string GUESS_SCENE = "06 GUESS_";
-    public const string SHOW_SCENE = "07 SHOW_";
-}
 
-public static class GameMode
+
+public struct GameMode
 {
     public const string NORMAL = "Normal";
-    public const string TOGETHER= "Together";
+    public const string TOGETHER = "Together";
     public const string REALTIME = "RealTime";
     public const string QUIZ = "Quiz";
 }
 
-public static class LobbyDataKey
+public struct LobbyDataKey
 {
     public const string LOBBY_DATA_KEY_TOPIC = "Topic";
     public const string LOBBY_DATA_KEY_TOPIC_INDEX = "TopicIndex";
@@ -59,15 +48,18 @@ public static class LobbyDataKey
     public const string LOBBY_PLAYER_DATA_IS_READY = "IsReady";
 }
 
-public static class GameCount
+public struct GameCount
 {
+    public const int CREATE_ROOM_COUNT = 10;
     public const int LOADING_COUNT = 5;
-    public const int KEYWORD_COUNT = 5;
-    public const int OUTFIT_COUNT = 10;
-    public const int GUESS_COUNT = 10;
+    public const int KEYWORD_COUNT = 15;
+    public const int OUTFIT_COUNT = 120;
+    public const int GUESS_COUNT = 20;
     public const int QUIZ_COUNT = 100;
+    public const int SHOW_COUNT = 60;
     public const int TOGETHER_MODE_MIN = 4;
 }
+
 
 
 
@@ -82,23 +74,10 @@ public class LobbyManager : MonoBehaviour
     private float heartBeatTimer      = 0f;
 
     public static string mCurSceneName;
-
-    private static Lobby curLobby = null;
-    public static Lobby CurLobby { get { return curLobby; } }
+    public static Lobby CurLobby { get; private set; }
 
 
 
-    private async void Awake()
-    {
-        try
-        {
-            await UnityServices.InitializeAsync();
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
-    }
     private void Update()
     {
         handleLobbyHeartBeat();
@@ -107,7 +86,7 @@ public class LobbyManager : MonoBehaviour
 
     private async void OnApplicationQuit()
     {
-        if(curLobby != null)
+        if(CurLobby != null)
         {
             await LeaveRoom();
         }
@@ -117,7 +96,7 @@ public class LobbyManager : MonoBehaviour
     private async void handleLobbyHeartBeat()
     {
         // 내가 호스트면 계속 살린다
-        if (curLobby != null && curLobby.HostId == AuthenticationService.Instance.PlayerId)
+        if (CurLobby != null && CurLobby.HostId == AuthenticationService.Instance.PlayerId)
         {
             heartBeatTimer -= Time.deltaTime;
             if (heartBeatTimer < 0f)
@@ -125,14 +104,14 @@ public class LobbyManager : MonoBehaviour
                 float heartBeatTimerMax = 15;
                 heartBeatTimer = heartBeatTimerMax;
 
-                await LobbyService.Instance.SendHeartbeatPingAsync(curLobby.Id);
+                await LobbyService.Instance.SendHeartbeatPingAsync(CurLobby.Id);
             }
         }
     }
     private async void handleLobbyPollForUpdates()
     {
         // 현재 로비 입장중이면 주기적으로 업데이트
-        if (curLobby != null && mCurSceneName == SceneName.WAITING_SCENE)
+        if (CurLobby != null && mCurSceneName == SceneName.WAITING_SCENE)
         {
             lobbyUpdateTimer -= Time.deltaTime;
             if (lobbyUpdateTimer < 0f)
@@ -142,13 +121,13 @@ public class LobbyManager : MonoBehaviour
                 // 업데이트 폴링
                 try
                 {
-                    curLobby = await LobbyService.Instance.GetLobbyAsync(curLobby.Id);
+                    CurLobby = await LobbyService.Instance.GetLobbyAsync(CurLobby.Id);
                 }
                 catch (LobbyServiceException e)
                 {
                     if (e.Reason == LobbyExceptionReason.EntityNotFound)
                     {
-                        curLobby = null;
+                        CurLobby = null;
                     }
 
                     Debug.Log(e);
@@ -176,7 +155,7 @@ public class LobbyManager : MonoBehaviour
                 {LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE, new DataObject(visibility: DataObject.VisibilityOptions.Public, value: GameMode.NORMAL)},
             };
 
-            curLobby = await LobbyService.Instance.CreateLobbyAsync(LOBBY_NAME, MAX_PLAYER, lobbyOptions);
+            CurLobby = await LobbyService.Instance.CreateLobbyAsync(LOBBY_NAME, MAX_PLAYER, lobbyOptions);
 
             return true;
         }
@@ -186,7 +165,6 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-
 
     public static async Task<bool> JoinRandomRoom()
     {
@@ -202,7 +180,7 @@ public class LobbyManager : MonoBehaviour
             else
             {
                 await Lobbies.Instance.JoinLobbyByIdAsync(queryResponse.Results[0].Id);
-                curLobby = queryResponse.Results[0];
+                CurLobby = queryResponse.Results[0];
                 Debug.Log("Joined Room");
                 return true;
             }
@@ -224,7 +202,7 @@ public class LobbyManager : MonoBehaviour
         try
         {
             await Lobbies.Instance.JoinLobbyByCodeAsync(code);
-            curLobby = await Lobbies.Instance.GetLobbyAsync(code);
+            CurLobby = await Lobbies.Instance.GetLobbyAsync(code);
             return true;
         }
         catch(LobbyServiceException e)
@@ -250,7 +228,7 @@ public class LobbyManager : MonoBehaviour
             {
                 {LobbyDataKey.LOBBY_DATA_KEY_RELAY_CODE, new DataObject(visibility: DataObject.VisibilityOptions.Public, value: relayCode)},
             };
-            curLobby = await Lobbies.Instance.UpdateLobbyAsync(CurLobby.Id, options);
+            CurLobby = await Lobbies.Instance.UpdateLobbyAsync(CurLobby.Id, options);
 
             return true;
         }
@@ -266,39 +244,31 @@ public class LobbyManager : MonoBehaviour
         Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
         var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));
-        //NetworkManager.Singleton.OnClientConnectedCallback+= 
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "wss"));
+        NetworkManager.Singleton.GetComponent<UnityTransport>().UseWebSockets = true;
         return NetworkManager.Singleton.StartHost() ? joinCode : null;
     }
 
-    public static async void StartClientWithRelay(string joinCode)
+    public static async Task<bool> StartClientWithRelay(string joinCode)
     {
         try
         {
             var joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode: joinCode);
 
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(joinAllocation, "dtls"));
-
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(joinAllocation, "wss"));
+            NetworkManager.Singleton.GetComponent<UnityTransport>().UseWebSockets = true;
             NetworkManager.Singleton.StartClient();
-
+            return true;
             //return !string.IsNullOrEmpty(joinCode) && NetworkManager.Singleton.StartClient();
         }
         catch(RelayServiceException e)
         {
             Debug.Log(e);
+            return false;
         }
-
-
-
     }
 
-
-    // 데이터 전송??? 
-
-    //-----------------------------------------------------------------------
-    //
-    // PLAYER DATA
-    //
+    #region Lobby Player Data
     public static async Task<bool> SetPlayerData(string _key, string _value)
     {
         try
@@ -310,7 +280,7 @@ public class LobbyManager : MonoBehaviour
             };
 
             string playerId = AuthenticationService.Instance.PlayerId;
-            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
+            var lobby = await LobbyService.Instance.UpdatePlayerAsync(CurLobby.Id, playerId, options);
             return true;
         }
         catch (LobbyServiceException e)
@@ -319,7 +289,6 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
-
     public static async Task<bool> SetPlayerData(string _key1,  string _value1, string _key2, string _value2)
     {
         try
@@ -332,7 +301,7 @@ public class LobbyManager : MonoBehaviour
             };
 
             string playerId = AuthenticationService.Instance.PlayerId;
-            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
+            var lobby = await LobbyService.Instance.UpdatePlayerAsync(CurLobby.Id, playerId, options);
             return true;
         }
         catch (LobbyServiceException e)
@@ -354,7 +323,7 @@ public class LobbyManager : MonoBehaviour
             };
 
             string playerId = AuthenticationService.Instance.PlayerId;
-            var lobby = await LobbyService.Instance.UpdatePlayerAsync(curLobby.Id, playerId, options);
+            var lobby = await LobbyService.Instance.UpdatePlayerAsync(CurLobby.Id, playerId, options);
             return true;
         }
         catch (LobbyServiceException e)
@@ -363,6 +332,8 @@ public class LobbyManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
+
 
     //-----------------------------------------------------------------------
     //
@@ -373,7 +344,7 @@ public class LobbyManager : MonoBehaviour
     {
         try
         {
-            curLobby = await Lobbies.Instance.UpdateLobbyAsync(curLobby.Id, new UpdateLobbyOptions { HostId = curLobby.Players[1].Id });
+            CurLobby = await Lobbies.Instance.UpdateLobbyAsync(CurLobby.Id, new UpdateLobbyOptions { HostId = CurLobby.Players[1].Id });
         }
         catch (LobbyServiceException e)
         {
@@ -386,26 +357,26 @@ public class LobbyManager : MonoBehaviour
 
         try
         {
-            if (curLobby.Players.Count > 1)
+            if (CurLobby.Players.Count > 1)
             {
                 // 내가 호스트면 양도
-                if (AuthenticationService.Instance.PlayerId == curLobby.HostId)
+                if (AuthenticationService.Instance.PlayerId == CurLobby.HostId)
                 {
                     migrateHost();
                 }
 
                 // 나가기
-                await LobbyService.Instance.RemovePlayerAsync(curLobby.Id, AuthenticationService.Instance.PlayerId);
+                await LobbyService.Instance.RemovePlayerAsync(CurLobby.Id, AuthenticationService.Instance.PlayerId);
             }
             else
             {
                 // 딜리트
-                await LobbyService.Instance.DeleteLobbyAsync(curLobby.Id);
+                await LobbyService.Instance.DeleteLobbyAsync(CurLobby.Id);
             }
 
             Debug.Log("Leaved Lobby");
             //LobbyEvents.OnLobbyUpdated -= OnLobbyUpdated;
-            curLobby = null;
+            CurLobby = null;
             mCurSceneName = "";
             return true;
         }
@@ -414,52 +385,5 @@ public class LobbyManager : MonoBehaviour
             Debug.LogError(e);
             return false;
         }
-    }
-
-
-
-
-
-
-
-
-
-    private async void listLobbies()
-    {
-        try
-        {
-            QueryLobbiesOptions queryLobbiesOptions = new QueryLobbiesOptions
-            {
-                Count = 10,
-                Filters = new List<QueryFilter> { new QueryFilter(QueryFilter.FieldOptions.AvailableSlots, "0", QueryFilter.OpOptions.GT) },
-                Order = new List<QueryOrder> { new QueryOrder(false, QueryOrder.FieldOptions.Created) }
-            };
-
-            QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(queryLobbiesOptions);
-
-            foreach (Lobby lobby in queryResponse.Results)
-            {
-                Debug.Log("Name : " + lobby.Name);
-            }
-
-            // TODO  : 주제와 현재 멤버 수 가져와서 UI 보여주기
-
-        }
-        catch (LobbyServiceException e)
-        {
-            Debug.LogError(e);
-        }
-    }
-
-    public void SearchRoom()
-    {
-        // 인기 주제
-        // 자동완성
-    }
-
-    public void GoToMyRoom()
-    {
-        // 인기 주제
-        // 내가 만든 퀴즈 아바타
     }
 }

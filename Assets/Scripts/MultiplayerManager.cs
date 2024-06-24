@@ -1,71 +1,41 @@
 using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
+using UnityEngine;
 
-//public struct GameData
-//{
-//    public ulong ClientId;
-//    public FixedString32Bytes NicName;
-
-//    public FixedString32Bytes Keyword;
-//    public List<StyleData> Styles;
-//    public List<AnswerData> Answers;
-//}
-
-//public struct AnswerData
-//{
-//    public ulong ClientId;
-//    public FixedString32Bytes NicName;
-
-//    public FixedString32Bytes Answer;
-//}
-
-//public struct StyleData
-//{
-//    public ulong ClientId;
-//    public FixedString32Bytes NicName;
-
-//    // head
-//    public int HairId;
-//    public int EyebrowId;
-//    public int MustacheId;
-//    public int BodyId;
-//    public int GlassesId;
-//    public int HatId;
-
-//    // body
-//    public int FullBodyId;
-//    public int OuterId;
-//    public int PantsId;
-//    public int BackpackId;
-//    public int GloveId;
-//    public int ShoeId;
-//}
-
-
-public struct QuizData : IEquatable<QuizData>, INetworkSerializable
+public struct NameData : IEquatable<NameData>, INetworkSerializable
 {
-    public ulong QuizId;
-    public FixedString32Bytes NicName;
+    public ulong Id;
+    public FixedString32Bytes Name;
 
-    public FixedString32Bytes Quiz;
-
-    public bool Equals(QuizData other)
+    public bool Equals(NameData other)
     {
-        return QuizId == other.QuizId
-            && NicName == other.NicName
-            && Quiz == other.Quiz;
+        return Id == other.Id && Name == other.Name;
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
-        serializer.SerializeValue(ref QuizId);
-        serializer.SerializeValue(ref NicName);
+        serializer.SerializeValue(ref Id);
+        serializer.SerializeValue(ref Name);
+    }
+}
+public struct QuizData : IEquatable<QuizData>, INetworkSerializable
+{
+    public ulong Id;
+    public FixedString32Bytes Quiz;
 
+    public bool Equals(QuizData other)
+    {
+        return Id == other.Id && Quiz == other.Quiz;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Id);
         serializer.SerializeValue(ref Quiz);
     }
 }
-
 public struct StyleData : IEquatable<StyleData>, INetworkSerializable
 {
     public ulong QuizId;
@@ -73,36 +43,37 @@ public struct StyleData : IEquatable<StyleData>, INetworkSerializable
 
     // head
     public int HairId;
+    public int BodyId;
     public int EyebrowId;
     public int MustacheId;
-    public int BodyId;
     public int GlassesId;
     public int HatId;
 
     // body
-    public int FullBodyId;
     public int OuterId;
     public int PantsId;
-    public int BackpackId;
-    public int GloveId;
     public int ShoeId;
+    public int GloveId;
+    public int BackpackId;
+    public int FullBodyId;
+
 
     public bool Equals(StyleData other)
     {
         return QuizId == other.QuizId
             && MyId == other.MyId
             && HairId == other.HairId
+            && BodyId == other.BodyId
             && EyebrowId == other.EyebrowId
             && MustacheId == other.MustacheId
-            && BodyId == other.BodyId
             && GlassesId == other.GlassesId
             && HatId == other.HatId
-            && FullBodyId == other.FullBodyId
             && OuterId == other.OuterId
             && PantsId == other.PantsId
-            && BackpackId == other.BackpackId
+            && ShoeId == other.ShoeId
             && GloveId == other.GloveId
-            && ShoeId == other.ShoeId;
+            && BackpackId == other.BackpackId
+            && FullBodyId == other.FullBodyId;
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -111,21 +82,20 @@ public struct StyleData : IEquatable<StyleData>, INetworkSerializable
         serializer.SerializeValue(ref MyId);
 
         serializer.SerializeValue(ref HairId);
+        serializer.SerializeValue(ref BodyId);
         serializer.SerializeValue(ref EyebrowId);
         serializer.SerializeValue(ref MustacheId);
-        serializer.SerializeValue(ref BodyId);
         serializer.SerializeValue(ref GlassesId);
         serializer.SerializeValue(ref HatId);
 
-        serializer.SerializeValue(ref FullBodyId);
         serializer.SerializeValue(ref OuterId);
         serializer.SerializeValue(ref PantsId);
-        serializer.SerializeValue(ref BackpackId);
-        serializer.SerializeValue(ref GloveId);
         serializer.SerializeValue(ref ShoeId);
+        serializer.SerializeValue(ref ShoeId);
+        serializer.SerializeValue(ref BackpackId);
+        serializer.SerializeValue(ref FullBodyId);
     }
 }
-
 public struct AnswerData : IEquatable<AnswerData>, INetworkSerializable
 {
     public ulong QuizId;
@@ -151,38 +121,144 @@ public struct AnswerData : IEquatable<AnswerData>, INetworkSerializable
 
 public class MultiplayerManager : NetworkBehaviour
 {
+    public NetworkVariable<FixedString32Bytes> mRelayCode;
+    public NetworkVariable<FixedString32Bytes> mTopic;
+    [SerializeField] private NetworkVariable<int> mTopicIndex;
+    public int TopicIndex
+    {
+        get 
+        {
+            return mTopicIndex.Value;
+        }
+        set 
+        {
+            if(IsHost)
+            {
+                mTopicIndex.Value = value;
+            }
+        }
+    }
+    public NetworkVariable<FixedString32Bytes> mGameMode;
     public NetworkVariable<int> mConnectedCount;
+    public int ConnectedCount
+    {
+        get
+        {
+            return mConnectedCount.Value;
+        }
+        set
+        {
+            mConnectedCount.Value = value;
+        }
+    }
 
-
-    // ulong, int ¸ÂÃß±â!!!
-
+    public NetworkList<NameData> mNameDatas;
     public NetworkList<QuizData> mQuizDatas;
-
     public NetworkList<StyleData> mStyleDatas;
     public NetworkList<AnswerData> mAnswerDatas;
-
-
 
     public static MultiplayerManager Instance { get; private set; }
     private void Awake() 
     {
-        Instance = this;
-        DontDestroyOnLoad(this);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
 
+        mNameDatas = new NetworkList<NameData>();
         mQuizDatas = new NetworkList<QuizData>();
         mStyleDatas = new NetworkList<StyleData>();
         mAnswerDatas = new NetworkList<AnswerData>();
     }
+    public override void OnNetworkSpawn()
+    {
+        if(IsHost)
+        {
+            mConnectedCount.Value = 0;
+        }
+
+        mConnectedCount.OnValueChanged += (int prevVal, int newVal) =>
+        {
+            WaitingSceneManager.Instance.UpdatePlayerCount(newVal);
+        };
+
+        mNameDatas.OnListChanged+= OnNameDatasChanged;
+    }
+
+    public string GetGameMode()
+    {
+        return mGameMode.Value.ToString();
+    }
+
+    #region Name
+    private void OnNameDatasChanged(NetworkListEvent<NameData> changeEvent)
+    {
+        if (changeEvent.Type == NetworkListEvent<NameData>.EventType.Add)
+        {
+            WaitingSceneManager.Instance.ShowEnter(changeEvent.Value.Name.ToString());
+        }
+
+        WaitingSceneManager.Instance.UpdatePlayerList();
+    }
 
     [ServerRpc(RequireOwnership = false)]
-    public void AddDataServerRpc(ulong myId, string quiz)
+    public void AddNameServerRpc(ulong id, string name)
     {
-        mQuizDatas.Add(new QuizData { QuizId = myId, Quiz = quiz});
+        mNameDatas.Add(new NameData { Id = id, Name = name });
+    }
 
-        mAnswerDatas.Add(new AnswerData { QuizId = myId, MyId = myId, Answer = quiz });
+    public void RemoveDisconnectedPlayerName(ulong id)
+    {
+        for (int i = 0; i < mNameDatas.Count; i++)
+        {
+            if (mNameDatas[i].Id == id)
+            {
+                mNameDatas.Remove(mNameDatas[i]);
+                return;
+            }
+        }
+    }
+
+    public List<string> GetNames()
+    {
+        List<string> names = new List<string>();
+        foreach (var item in mNameDatas)
+        {
+            names.Add(item.Name.ToString());
+        }
+
+        return names;
+    }
+    #endregion
+
+    #region Quiz
+    [ServerRpc(RequireOwnership = false)]
+    public void AddQuizServerRpc(ulong id, string quiz)
+    {
+        mQuizDatas.Add(new QuizData { Id = id, Quiz = quiz });
 
         mConnectedCount.Value = NetworkManager.Singleton.ConnectedClientsList.Count;
     }
+
+    public string GetQuiz(ulong index)
+    {
+        foreach (QuizData quizData in mQuizDatas)
+        {
+            if (quizData.Id == index)
+            {
+                return quizData.Quiz.ToString();
+            }
+        }
+
+        return null;
+    }
+    #endregion
+
 
 
 
@@ -192,12 +268,11 @@ public class MultiplayerManager : NetworkBehaviour
     {
         mAnswerDatas.Add(new AnswerData { QuizId = quizId, MyId = myId, Answer = answer});
     }
-
-    public string GetAnswer(int index)
+    public string GetAnswer(ulong index)
     {
         foreach (AnswerData answerData in mAnswerDatas)
         {
-            if ((int)answerData.MyId == index)
+            if (answerData.QuizId == index)
             {
                 return answerData.Answer.ToString();
             }
@@ -206,26 +281,34 @@ public class MultiplayerManager : NetworkBehaviour
         return null;
     }
 
-
-
-
-
-
     [ServerRpc(RequireOwnership = false)]
-    public void AddStyleServerRpc(ulong quizId, ulong id, int hair)
+    public void AddStyleServerRpc(ulong quizId, ulong id, int hair, int body, int eyebrow, int mustache,  int glasses, int hat, int outer, int pants, int shoe, int glove, int backpack, int fullBody)
     {
-        mStyleDatas.Add(new StyleData {  QuizId = quizId, MyId = id,  HairId = hair});
+        mStyleDatas.Add(new StyleData 
+        {  
+            QuizId = quizId, MyId = id,  
+
+            HairId = hair,
+            BodyId = body,
+            EyebrowId = eyebrow,
+            MustacheId = mustache,
+            GlassesId = glasses,
+            HatId = hat,
+            OuterId = outer,
+            PantsId = pants,
+            ShoeId = shoe,        
+            GloveId = glove,
+            BackpackId = backpack,
+            FullBodyId = fullBody,
+        });
     }
-
-    public StyleData GetStyle(int index)
+    public StyleData GetStyle(ulong index)
     {
-        //int index = (myIndex + 1) % mConnectedCount.Value;
-
-        foreach (StyleData playerData in mStyleDatas)
+        foreach (StyleData styleData in mStyleDatas)
         {
-            if ((int)playerData.QuizId == index)
+            if (styleData.QuizId == index)
             {
-                return playerData;
+                return styleData;
             }
         }
 

@@ -12,4 +12,5 @@ public class Item
 public class TopicKeywordData : ScriptableObject
 {
     public List<Item> Items;
+    public static uint ItemCount;
 }

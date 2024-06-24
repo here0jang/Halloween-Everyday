@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Threading.Tasks;
-using MameshibaGames.Kekos.RuntimeExampleScene.Spawner;
+//using MameshibaGames.Kekos.RuntimeExampleScene.Spawner;
 using System.Collections.Generic;
-using MameshibaGames.Common.Helpers;
+//using MameshibaGames.Common.Helpers;
 using Unity.Netcode;
 
 public class QuizManager : NetworkBehaviour
@@ -14,7 +14,7 @@ public class QuizManager : NetworkBehaviour
     public List<KeywordButton> KeywordButtons = new List<KeywordButton>();
     public GameObject Result;
 
-    public CharacterSpawner CharacterSpawner;
+    //public CharacterSpawner CharacterSpawner;
 
     private static List<ulong> mConnectedClients = new List<ulong>();
 
@@ -71,7 +71,7 @@ public class QuizManager : NetworkBehaviour
     {
         TopicText.text = "주제 : " + LobbyManager.CurLobby.Data["Topic"].Value;
         mLoading = Instantiate(Resources.Load<GameObject>("Loading UI"));
-        await Task.Delay(5000);
+        //await Task.Delay(5000);
         mLoading.SetActive(false);
 
 
@@ -124,7 +124,7 @@ public class QuizManager : NetworkBehaviour
             }
 
             // 키워드 섞기
-            keywordList.Shuffle();
+            //keywordList.Shuffle();
 
             // 키워드 버튼에 뿌리기
             for (int index = 0; index < KeywordButtons.Count; index++)

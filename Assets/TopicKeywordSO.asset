@@ -37,13 +37,6 @@ MonoBehaviour:
     - "\uAC10\uC790"
     - "\uACE0\uAD6C\uB9C8"
     - "\uC591\uBC30\uCD94"
-  - Topic: "\uAE30\uD68D\uC0AC"
-    Keywords:
-    - SM
-    - YG
-    - HYBE
-    - JYP
-    - CUBE
   - Topic: "\uC0BC\uAD6D\uC9C0"
     Keywords:
     - "\uC720\uBE44"
@@ -51,12 +44,6 @@ MonoBehaviour:
     - "\uC7A5\uBE44"
     - "\uC870\uC870"
     - "\uC7AC\uAC08\uB7C9"
-  - Topic: "\uC740\uD589"
-    Keywords:
-    - "\uD558\uB098\uC740\uD589"
-    - "\uAD6D\uBBFC\uC740\uD589"
-    - "\uC2E0\uD55C\uC740\uD589"
-    - "\uC6B0\uB9AC\uC740\uD589"
   - Topic: "\uBE75"
     Keywords:
     - "\uD325\uBE75"

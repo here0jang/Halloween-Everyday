@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
 using UnityEngine.UI;
 using System;
+using System.Collections;
 
 public class OutfitNormalSceneManager : NetworkBehaviour
 {
@@ -32,11 +32,10 @@ public class OutfitNormalSceneManager : NetworkBehaviour
     [SerializeField] private Button[] mRemoveItemButtons                              = new Button[(int)EItems.last];
 
     public int[] mItemIndexs                                                                                    = new int[(int)EItems.last];
+    private bool[] mIsButtonInited                                                                          = new bool[(int)EItems.last];
 
-
-
+    PlayerManager mPlayerManager;
     public static OutfitNormalSceneManager Instance { get; private set; }
-
     private void Awake()
     {
         if (Instance == null)
@@ -47,6 +46,7 @@ public class OutfitNormalSceneManager : NetworkBehaviour
         {
             Destroy(gameObject);
         }
+
 
         mHeadMainButton.onClick.RemoveAllListeners();
         mHeadMainButton.onClick.AddListener(() =>
@@ -66,6 +66,8 @@ public class OutfitNormalSceneManager : NetworkBehaviour
             onBodySideManuClicked(6);
         });
 
+
+
         for (int i = 0; i < (int)EItems.last; i++)
         {
             int tmp = i;
@@ -73,14 +75,16 @@ public class OutfitNormalSceneManager : NetworkBehaviour
             mRemoveItemButtons[tmp].onClick.AddListener(() =>
             {
                 mSkinMeshRenderers[tmp].sharedMesh = null;
-                //onRemoveItemClicked(tmp); 
+                mItemIndexs[tmp] = -1;
             });
         }
+
+
 
         for (int i = 0; i < (int)EItems.outerwear; i++)
         {
             int tmp  = i;
-            initItemButtons(tmp, mItemDatabases[tmp], mContentTransforms[tmp], changeItem);
+
             mItemButtons[tmp].onClick.RemoveAllListeners();
             mItemButtons[tmp].onClick.AddListener(() => { onHeadSideManuClicked(tmp); });
         }
@@ -88,7 +92,7 @@ public class OutfitNormalSceneManager : NetworkBehaviour
         for (int i = (int)EItems.outerwear; i < (int)EItems.last; i++)
         {
             int tmp = i;
-            initItemButtons(tmp, mItemDatabases[tmp], mContentTransforms[tmp], changeItem);
+            //initItemButtons(tmp, mItemDatabases[tmp], mContentTransforms[tmp], changeItem);
             mItemButtons[tmp].onClick.RemoveAllListeners();
             mItemButtons[tmp].onClick.AddListener(() => { onBodySideManuClicked(tmp); });
         }
@@ -145,11 +149,6 @@ public class OutfitNormalSceneManager : NetworkBehaviour
         mSkinMeshRenderers[category].sharedMesh = mItemDatabases[category].mDatas[index].mMesh;
     }
 
-    private void onRemoveItemClicked(int index)
-    {
-        mSkinMeshRenderers[index].sharedMesh = null;
-    }
-
     private void onHeadSideManuClicked(int index)
     {
         mItemScrolls[0].SetActive(index == 0);
@@ -158,6 +157,12 @@ public class OutfitNormalSceneManager : NetworkBehaviour
         mItemScrolls[3].SetActive(index == 3);
         mItemScrolls[4].SetActive(index == 4);
         mItemScrolls[5].SetActive(index == 5);
+
+        if (index != -1 && mIsButtonInited[index] == false)
+        {
+            mIsButtonInited[index] = true;
+            initItemButtons(index, mItemDatabases[index], mContentTransforms[index], changeItem);
+        }
     }
 
     private void onBodySideManuClicked(int index)
@@ -168,6 +173,12 @@ public class OutfitNormalSceneManager : NetworkBehaviour
         mItemScrolls[9].SetActive(index == 9);
         mItemScrolls[10].SetActive(index == 10);
         mItemScrolls[11].SetActive(index == 11);
+
+        if (index != -1 && mIsButtonInited[index] == false)
+        {
+            mIsButtonInited[index] = true;
+            initItemButtons(index, mItemDatabases[index], mContentTransforms[index], changeItem);
+        }
     }
 
 
@@ -206,50 +217,82 @@ public class OutfitNormalSceneManager : NetworkBehaviour
     [ClientRpc]
     private void StartOutFitClientRpc()
     {
-        startOutfitAsync();
+        startOutfit();
     }
             
-    private async void startOutfitAsync()
+    private void startOutfit()
     {
+        // 변수 초기화
+        mItemIndexs[(int)EItems.hair] = 0;
+        mItemIndexs[(int)EItems.body] = 0;
+        mItemIndexs[(int)EItems.eyebrow] = 0;
+        mItemIndexs[(int)EItems.mustache] = -1;
+        mItemIndexs[(int)EItems.glasses] = -1;
+        mItemIndexs[(int)EItems.hat] = -1;
+
+        mItemIndexs[(int)EItems.outerwear] = 0;
+        mItemIndexs[(int)EItems.pants] = 0;
+        mItemIndexs[(int)EItems.shoe] = 0;
+        mItemIndexs[(int)EItems.glove] = 0;
+        mItemIndexs[(int)EItems.backpack] = -1;
+        mItemIndexs[(int)EItems.fullBody] = -1;
+
         // 키워드, 닉네임
-        PlayerManager mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
-        int index = (mPlayerManager.mCurIndex.Value + 1) % MultiplayerManager.Instance.mConnectedCount.Value;
+        mPlayerManager = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerManager>();
+        ulong index = (mPlayerManager.mCurIndex.Value + 1) % (ulong)MultiplayerManager.Instance.mConnectedCount.Value;
         mPlayerManager.UpdateCurIndexServerRpc(index);
-
-        string keyword = MultiplayerManager.Instance.GetAnswer(index); 
-        await Task.Delay(2000);
-        mLoading.SetActive(false);
+        //string keyword = MultiplayerManager.Instance.GetAnswer(index); 
+        string keyword = MultiplayerManager.Instance.GetQuiz(index); 
         mKeywordText.text = "<color=#6D60CC>" + keyword + "</color>로 꾸미세요!";
+        mLoading.SetActive(false);
 
+        StartCoroutine(timer());
+    }
 
+    IEnumerator timer()
+    {
         #region Timer
-        // 타이머
-        float timer = (float)System.DateTime.Now.TimeOfDay.TotalSeconds + GameCount.OUTFIT_COUNT; /* 하드웨어 시간 이용 */
-        while (timer > (float)System.DateTime.Now.TimeOfDay.TotalSeconds)
+        int i = GameCount.OUTFIT_COUNT;
+        while (i > 0) 
         {
-            mLimitText.text = $"{timer - (float)System.DateTime.Now.TimeOfDay.TotalSeconds:N0}";
-            await Task.Yield();
+            mLimitText.text = i.ToString();
+            i--;
+            yield return new WaitForSecondsRealtime(1);
         }
         #endregion
 
 
         // 스타일 저장
         mLoading.SetActive(true);
-        MultiplayerManager.Instance.AddStyleServerRpc((ulong)mPlayerManager.mCurIndex.Value, (ulong)mPlayerManager.mMyIndex.Value, mItemIndexs[0]);
+        MultiplayerManager.Instance.AddStyleServerRpc((ulong)mPlayerManager.mCurIndex.Value, (ulong)mPlayerManager.mMyIndex.Value,
+            mItemIndexs[(int)EItems.hair],
+            mItemIndexs[(int)EItems.body],
+            mItemIndexs[(int)EItems.eyebrow],
+            mItemIndexs[(int)EItems.mustache],
+            mItemIndexs[(int)EItems.glasses],
+            mItemIndexs[(int)EItems.hat],
+            mItemIndexs[(int)EItems.outerwear],
+            mItemIndexs[(int)EItems.pants],
+            mItemIndexs[(int)EItems.shoe],
+            mItemIndexs[(int)EItems.glove],
+            mItemIndexs[(int)EItems.backpack],
+            mItemIndexs[(int)EItems.fullBody]);
 
 
         // 이동
         if (NetworkManager.Singleton.IsHost)
         {
-            int nextIndex = (mPlayerManager.mCurIndex.Value + 1) % MultiplayerManager.Instance.mConnectedCount.Value;
-            if (nextIndex != mPlayerManager.mMyIndex.Value)
-            {
-                NetworkManager.Singleton.SceneManager.LoadScene(SceneName.GUESS_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
-            }
-            else
-            {
-                NetworkManager.Singleton.SceneManager.LoadScene(SceneName.SHOW_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
-            }
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneName.GUESS_SCENE + MultiplayerManager.Instance.GetGameMode(), LoadSceneMode.Single);
+
+            //int nextIndex = (mPlayerManager.mCurIndex.Value + 1) % MultiplayerManager.Instance.mConnectedCount.Value;
+            //if (nextIndex != mPlayerManager.mMyIndex.Value)
+            //{
+            //    NetworkManager.Singleton.SceneManager.LoadScene(SceneName.GUESS_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
+            //}
+            //else
+            //{
+            //    NetworkManager.Singleton.SceneManager.LoadScene(SceneName.SHOW_SCENE + LobbyManager.CurLobby.Data[LobbyDataKey.LOBBY_DATA_KEY_GAME_MODE].Value, LoadSceneMode.Single);
+            //}
         }
     }
 }
