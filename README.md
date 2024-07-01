@@ -1,7 +1,7 @@
 
 
 <a href="https://halloweeeneveryday.com/"> ![Vector (1)](https://github.com/here0jang/Halloween-Everyday/assets/63058513/e768bf5c-7566-40f2-be3f-6fdd8339d2e0) </a>
-<h1>캐릭터를 꾸며서 단어를 설명하는 캐치마인드 형식의 퀴즈 + 옷 입히기 게임.</h1>
+<h3>캐릭터를 꾸며서 단어를 설명하는 캐치마인드 형식의 퀴즈 + 옷 입히기 게임.</h3>h3>
 
 규칙을 통해 표현의 제약을 걸고, 그 안에서 창의력을 발휘하는 과정에서 재미를 얻는 게임
 
